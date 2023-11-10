@@ -65,6 +65,7 @@ func testmap(s tcell.Screen) {
 	controltxt := ""
 	hudtxt := ""
 	playerstate = "choose"
+	beingattacked := false
 
 	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
 
@@ -85,8 +86,10 @@ func testmap(s tcell.Screen) {
 			} else {
 				hudtxt = "The enemy cutout cannot do anything to you."
 			}
+			controltxt = "Press any key to continue..."
 
 			playerstate = "waitforkeypress"
+			beingattacked = true
 		}
 
 		if equiped == "Stick" {
@@ -236,10 +239,6 @@ func testmap(s tcell.Screen) {
 				}
 			}
 
-			if playerstate == "waitforkeypress" {
-				playerstate = "idle"
-			}
-
 			if playerstate == "youcannotreach" {
 				playerstate = "choose"
 			}
@@ -276,6 +275,15 @@ func testmap(s tcell.Screen) {
 			}
 
 			break
+		}
+
+		if playerstate == "waitforkeypress" {
+			if beingattacked {
+				playerstate = "choose"
+				beingattacked = false
+			} else {
+				playerstate = "idle"
+			}
 		}
 	}
 }
