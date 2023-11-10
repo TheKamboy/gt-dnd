@@ -81,6 +81,9 @@ func testmap(s tcell.Screen) {
 				}
 			}
 			if enemyhit {
+				hudtxt = "The enemy cutout falls over, and cuts you. You lost 1 HP."
+			} else {
+				hudtxt = "The enemy cutout cannot do anything to you."
 			}
 
 			playerstate = "waitforkeypress"
