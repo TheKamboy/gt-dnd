@@ -1,0 +1,56 @@
+#+TITLE: Todo
+#+AUTHOR: TheKamboy
+#+DATE:<2023-10-06 Fri>
+
+#+BEGIN: clocktable :scope file :maxlevel 5 :compact t :tags t :block thismonth
+#+CAPTION: Clock summary at [2023-10-08 Sun 13:12], for October 2023.
+| Tags     | Headline                   |   Time |
+|----------+----------------------------+--------|
+|          | *Total time*               | *1:35* |
+|----------+----------------------------+--------|
+|          | Work                       |   1:35 |
+|          | \_  Code                   |   1:32 |
+|          | \_    DND functions        |   1:25 |
+| controls | \_      Action Select Menu |   1:25 |
+| controls | \_        Finish Movement  |   0:03 |
+|          | \_    Testing Stage        |   0:07 |
+| map      | \_      Make Map           |   0:07 |
+|          | \_  Story                  |   0:03 |
+| story    | \_    Create Story         |   0:03 |
+#+END:
+
+* Work
+** Code
+*** PROJ DND functions
+**** TODO [#A] Action Select Menu :controls:
+:LOGBOOK:
+CLOCK: [2023-10-08 Sun 12:56]--[2023-10-08 Sun 13:12] =>  0:16
+CLOCK: [2023-10-07 Sat 16:37]--[2023-10-07 Sat 16:54] =>  0:17
+CLOCK: [2023-10-07 Sat 16:26]--[2023-10-07 Sat 16:34] =>  0:08
+CLOCK: [2023-10-07 Sat 16:13]--[2023-10-07 Sat 16:20] =>  0:07
+CLOCK: [2023-10-07 Sat 11:08]--[2023-10-07 Sat 11:17] =>  0:09
+CLOCK: [2023-10-07 Sat 10:53]--[2023-10-07 Sat 10:58] =>  0:05
+CLOCK: [2023-10-07 Sat 10:35]--[2023-10-07 Sat 10:52] =>  0:17
+CLOCK: [2023-10-07 Sat 11:04]--[2023-10-07 Sat 11:07] =>  0:03
+:END:
+Contains Movement, Attacking, Stats
+***** DONE Finish Movement
+:LOGBOOK:
+CLOCK: [2023-10-07 Sat 16:03]--[2023-10-07 Sat 16:06] =>  0:03
+:END:
+**** TODO [#C] Inventory Menu :controls:
+**** TODO [#A] Enemy AI
+*** PROJ Testing Stage
+**** DONE [#A] Make Map :map:
+:LOGBOOK:
+CLOCK: [2023-10-06 Fri 19:54]--[2023-10-06 Fri 20:01] =>  0:07
+:END:
+**** TODO Map Barriers :map:
+*** PROJ Ground Elements
+**** TODO [#A] Water Element
+**** TODO [#A] Fire Element
+** Story
+*** DONE Create Story :story:
+:LOGBOOK:
+CLOCK: [2023-10-07 Sat 10:21]--[2023-10-07 Sat 10:24] =>  0:03
+:END:
