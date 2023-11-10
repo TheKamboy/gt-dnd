@@ -16,9 +16,11 @@ var aimingstyle tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Fo
 var playerstate string = "choose"
 
 // Keegan's Health
-var hp int = 10
-var maxhp int = 10
-var armor int = 0
+var (
+	hp    int = 10
+	maxhp int = 10
+	armor int = 0
+)
 
 func drawText(s tcell.Screen, x, y int, text string) {
 	row := y
@@ -96,11 +98,6 @@ func testmap(s tcell.Screen) {
 			controltxt = "Press any key to continue..."
 		}
 
-		if playerstate == "youcannotreach" {
-			hudtxt = "You cannot reach that far!"
-			controltxt = "Press any key to continue..."
-		}
-
 		if playerstate == "choose" {
 			controltxt = "[m]ove [a]ttack [s]tats [i]nventory"
 			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Weapon: " + equiped + ", Status: Choosing Action"
@@ -114,6 +111,11 @@ func testmap(s tcell.Screen) {
 
 		if playerstate == "choose" && steps == 6 {
 			controltxt = "[a]ttack [s]tats [i]nventory"
+		}
+
+		if playerstate == "youcannotreach" {
+			hudtxt = "You cannot reach that far!"
+			controltxt = "Press any key to continue..."
 		}
 
 		s.Clear()
