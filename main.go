@@ -74,7 +74,16 @@ func testmap(s tcell.Screen) {
 
 		if playerstate == "idle" {
 			steps = 0
-			playerstate = "choose"
+			enemyhit := false
+			if x == 1 || x == 2 {
+				if y == 1 || y == 2 {
+					enemyhit = true
+				}
+			}
+			if enemyhit {
+			}
+
+			playerstate = "waitforkeypress"
 		}
 
 		if equiped == "Stick" {
@@ -217,7 +226,7 @@ func testmap(s tcell.Screen) {
 							}
 						}
 
-						if cantreach == true {
+						if cantreach {
 							playerstate = "youcannotreach"
 						}
 					}
