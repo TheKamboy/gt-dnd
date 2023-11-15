@@ -114,7 +114,7 @@ func testmap(s tcell.Screen) {
 		}
 
 		if playerstate == "choose" {
-			controltxt = "[m]ove [a]ttack [s]tats [i]nventory"
+			controltxt = "[m]ove [a]ttack [s]tats [i]nventory [e]nd turn"
 			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Weapon: " + equiped + ", Status: Choosing Action"
 		} else if playerstate == "move" {
 			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Status: Moving"
@@ -125,7 +125,7 @@ func testmap(s tcell.Screen) {
 		}
 
 		if playerstate == "choose" && steps == 6 {
-			controltxt = "[a]ttack [s]tats [i]nventory"
+			controltxt = "[a]ttack [s]tats [i]nventory [e]nd turn"
 		}
 
 		if playerstate == "youcannotreach" {
@@ -166,6 +166,10 @@ func testmap(s tcell.Screen) {
 			case *tcell.EventResize:
 				s.Sync()
 			case *tcell.EventKey:
+				if ev.Rune() == 'q' {
+					s.Fini()
+					os.Exit(0)
+				}
 				if ev.Rune() == 'm' {
 					if playerstate != "move" && steps != 6 {
 						// moving
@@ -236,6 +240,8 @@ func testmap(s tcell.Screen) {
 							playerstate = "youcannotreach"
 						}
 					}
+				} else if ev.Rune() == 'e' {
+					playerstate = "idle"
 				}
 			}
 
