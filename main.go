@@ -23,6 +23,7 @@ var (
 	armore   string = "Nothing" // Display Armor Name
 	strength int    = 0
 	equiped  string = "Stick" // Weapon Name and Damage Checker
+	items           = []string{"Stick"}
 )
 
 // Draw Text with Tcell
@@ -52,8 +53,38 @@ func yourstats(s tcell.Screen, strength int, equiped string) {
 
 }
 
-func attackdamage() {
+func rolld20() (roll int) {
+	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	roll = r.Intn(19) + 1
 
+	return
+}
+
+func startattackplayer(hitchance int) (damage int, hit bool, crit bool, roll int) {
+	//r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	roll = rolld20()
+
+	if roll < hitchance {
+		hit = false
+		damage = 0
+	} else if roll == 20 {
+		hit = true
+		crit = true
+	} else {
+		hit = true
+	}
+
+	if hit == true {
+		// Check weapon
+		if equiped == "Stick" {
+			damage = 1
+			if crit {
+				damage += 1
+			}
+		}
+	}
+
+	return
 }
 
 func testmap(s tcell.Screen) {
@@ -62,7 +93,6 @@ func testmap(s tcell.Screen) {
 	y := 3
 	bx := x
 	by := y
-	//rollfordamage := false
 
 	// Keegan Aim
 	ax := x
@@ -80,11 +110,11 @@ func testmap(s tcell.Screen) {
 	playerstate = "choose"
 	beingattacked := false
 
-	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	//r := rand.New(rand.NewSource(time.Now().UnixMicro()))
 
 	println(bx, by)
 	for {
-		r = rand.New(rand.NewSource(time.Now().UnixMicro()))
+		//r = rand.New(rand.NewSource(time.Now().UnixMicro()))
 
 		if playerstate == "idle" {
 			steps = 0
@@ -119,20 +149,20 @@ func testmap(s tcell.Screen) {
 		}
 
 		if playerstate == "enemy1" {
-			randnum := r.Intn(19) + 1
+			// damage, hit, crit, roll = startattackplayer(10)
 
-			if randnum < 10 {
-				hudtxt = "You missed with a roll of " + strconv.Itoa(randnum) + "."
-				playerstate = "waitforkeypress"
-			} else if randnum == 20 {
-				hudtxt = "You got critical hit with a damage of " + strconv.Itoa(strength+4) + "!"
-				playerstate = "waitforkeypress"
-				ehp -= strength + 4
-			} else {
-				hudtxt = "You got a hit with a damage of " + strconv.Itoa(strength) + "!"
-				playerstate = "waitforkeypress"
-				ehp -= strength
-			}
+			// if randnum < 10 {
+			// 	hudtxt = "You missed with a roll of " + strconv.Itoa(randnum) + "."
+			// 	playerstate = "waitforkeypress"
+			// } else if randnum == 20 {
+			// 	hudtxt = "You got critical hit with a damage of " + strconv.Itoa(strength+4) + "!"
+			// 	playerstate = "waitforkeypress"
+			// 	ehp -= strength + 4
+			// } else {
+			// 	hudtxt = "You got a hit with a damage of " + strconv.Itoa(strength) + "!"
+			// 	playerstate = "waitforkeypress"
+			// 	ehp -= strength
+			// }
 
 			controltxt = "Press any key to continue..."
 		}
