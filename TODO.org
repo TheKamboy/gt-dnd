@@ -3,20 +3,16 @@
 #+DATE:<2023-10-06 Fri>
 
 #+BEGIN: clocktable :scope file :maxlevel 5 :compact t :tags t :block thismonth
-#+CAPTION: Clock summary at [2023-10-08 Sun 13:12], for October 2023.
-| Tags     | Headline                   |   Time |
-|----------+----------------------------+--------|
-|          | *Total time*               | *1:35* |
-|----------+----------------------------+--------|
-|          | Work                       |   1:35 |
-|          | \_  Code                   |   1:32 |
-|          | \_    DND functions        |   1:25 |
-| controls | \_      Action Select Menu |   1:25 |
-| controls | \_        Finish Movement  |   0:03 |
-|          | \_    Testing Stage        |   0:07 |
-| map      | \_      Make Map           |   0:07 |
-|          | \_  Story                  |   0:03 |
-| story    | \_    Create Story         |   0:03 |
+#+CAPTION: Clock summary at [2023-11-14 Tue 20:05], for November 2023.
+| Tags | Headline                      |   Time |
+|------+-------------------------------+--------|
+|      | *Total time*                  | *0:21* |
+|------+-------------------------------+--------|
+|      | Work                          |   0:21 |
+|      | \_  Code                      |   0:21 |
+|      | \_    DND functions           |   0:21 |
+|      | \_      Enemy AI              |   0:21 |
+|      | \_        Finish Enemy Health |   0:21 |
 #+END:
 
 * Work
@@ -38,8 +34,13 @@ Contains Movement, Attacking, Stats
 :LOGBOOK:
 CLOCK: [2023-10-07 Sat 16:03]--[2023-10-07 Sat 16:06] =>  0:03
 :END:
+***** TODO Finish Stats
 **** TODO [#C] Inventory Menu :controls:
 **** TODO [#A] Enemy AI
+***** TODO Finish Enemy Health
+:LOGBOOK:
+CLOCK: [2023-11-14 Tue 19:44]--[2023-11-14 Tue 20:05] =>  0:21
+:END:
 *** PROJ Testing Stage
 **** DONE [#A] Make Map :map:
 :LOGBOOK:

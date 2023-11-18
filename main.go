@@ -12,16 +12,20 @@ import (
 
 var aimingstyle tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorRed)
 
-// choose = choosing action, waitforkeypress = Wait for Key Press, idle = not player turn, move = moving action, moved = just moved a step (for checking barriers), attack = attack action, youcannotreach = show cannot reach msg, enemy# = attack enemy, moveattack = aim attack, movedattack = choose aim attack, inventory = view inventory
+// choose = choosing action, waitforkeypress = Wait for Key Press, idle = not player turn, move = moving action, moved = just moved a step (for checking barriers), attack = attack action, youcannotreach = show cannot reach msg, enemy# = attack enemy, moveattack = aim attack, movedattack = choose aim attack, noenemy = show no enemy msg, inventory = view inventory
 var playerstate string = "choose"
 
-// Keegan's Health
+// Keegan's Stats
 var (
-	hp    int = 10
-	maxhp int = 10
-	armor int = 0
+	hp       int    = 10
+	maxhp    int    = 10
+	armor    int    = 0
+	armore   string = "Nothing" // Display Armor Name
+	strength int    = 0
+	equiped  string = "Stick" // Weapon Name and Damage Checker
 )
 
+// Draw Text with Tcell
 func drawText(s tcell.Screen, x, y int, text string) {
 	row := y
 	col := x
@@ -33,6 +37,7 @@ func drawText(s tcell.Screen, x, y int, text string) {
 	}
 }
 
+// Draw Text with Tcell, and a custom style for that text
 func drawTextStyle(s tcell.Screen, x, y int, style tcell.Style, text string) {
 	row := y
 	col := x
@@ -43,14 +48,21 @@ func drawTextStyle(s tcell.Screen, x, y int, style tcell.Style, text string) {
 	}
 }
 
+func yourstats(s tcell.Screen, strength int, equiped string) {
+
+}
+
+func attackdamage() {
+
+}
+
 func testmap(s tcell.Screen) {
 	// Keegan
 	x := 3
 	y := 3
 	bx := x
 	by := y
-	equiped := "Stick"
-	strength := 0
+	//rollfordamage := false
 
 	// Keegan Aim
 	ax := x
@@ -59,6 +71,7 @@ func testmap(s tcell.Screen) {
 	// Enemy
 	ex := 1
 	ey := 1
+	ehp := 1
 
 	// ehp := 10
 	steps := 0
@@ -78,18 +91,27 @@ func testmap(s tcell.Screen) {
 			enemyhit := false
 			if x == 1 || x == 2 {
 				if y == 1 || y == 2 {
-					enemyhit = true
+					if !(ehp <= 0) {
+						enemyhit = true
+					}
 				}
 			}
-			if enemyhit {
-				hudtxt = "The enemy cutout falls over, and cuts you. You lost 1 HP."
-			} else {
-				hudtxt = "The enemy cutout cannot do anything to you."
-			}
-			controltxt = "Press any key to continue..."
 
-			playerstate = "waitforkeypress"
-			beingattacked = true
+			if enemyhit {
+				hudtxt = "The enemy cutout falls over, and cuts you. You lost 1 HP (but you have infinity health)."
+			} else {
+				if !(ehp <= 0) {
+					hudtxt = "The enemy cutout cannot do anything to you."
+				}
+			}
+
+			if !(ehp <= 0) {
+				controltxt = "Press any key to continue..."
+				playerstate = "waitforkeypress"
+				beingattacked = true
+			} else {
+				playerstate = "choose"
+			}
 		}
 
 		if equiped == "Stick" {
@@ -105,9 +127,11 @@ func testmap(s tcell.Screen) {
 			} else if randnum == 20 {
 				hudtxt = "You got critical hit with a damage of " + strconv.Itoa(strength+4) + "!"
 				playerstate = "waitforkeypress"
+				ehp -= strength + 4
 			} else {
 				hudtxt = "You got a hit with a damage of " + strconv.Itoa(strength) + "!"
 				playerstate = "waitforkeypress"
+				ehp -= strength
 			}
 
 			controltxt = "Press any key to continue..."
@@ -133,6 +157,13 @@ func testmap(s tcell.Screen) {
 			controltxt = "Press any key to continue..."
 		}
 
+		if playerstate == "noenemy" {
+			hudtxt = "There is no enemy to hit!"
+			controltxt = "Press any key to continue..."
+			beingattacked = true
+			playerstate = "waitforkeypress"
+		}
+
 		s.Clear()
 		drawText(s, 0, 0, "------")
 		drawText(s, 0, 1, "|    |")
@@ -140,7 +171,10 @@ func testmap(s tcell.Screen) {
 		drawText(s, 0, 3, "|    |")
 		drawText(s, 0, 4, "------")
 		drawText(s, x, y, "K")
-		drawTextStyle(s, ex, ey, aimingstyle, "B")
+
+		if !(ehp <= 0) {
+			drawTextStyle(s, ex, ey, aimingstyle, "B")
+		}
 
 		if playerstate == "attack" {
 			drawTextStyle(s, ax, ay, aimingstyle, "+")
@@ -166,6 +200,7 @@ func testmap(s tcell.Screen) {
 			case *tcell.EventResize:
 				s.Sync()
 			case *tcell.EventKey:
+				// Quiting for debug
 				if ev.Rune() == 'q' {
 					s.Fini()
 					os.Exit(0)
@@ -188,7 +223,11 @@ func testmap(s tcell.Screen) {
 					} else if playerstate != "attack" {
 						ax = ex
 						ay = ey
-						playerstate = "attack"
+						if !(ehp <= 0) {
+							playerstate = "attack"
+						} else {
+							playerstate = "noenemy"
+						}
 					}
 				} else if ev.Rune() == 's' {
 					// check stats or move in moving state
@@ -198,6 +237,8 @@ func testmap(s tcell.Screen) {
 						y += 1
 						steps += 1
 						playerstate = "moved"
+					} else {
+
 					}
 				} else if ev.Rune() == 'd' {
 					// for moving
