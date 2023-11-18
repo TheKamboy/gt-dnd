@@ -53,6 +53,13 @@ func yourstats(s tcell.Screen, strength int, equiped string) {
 
 }
 
+func rolld4() (roll int) {
+	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	roll = r.Intn(3) + 1
+
+	return
+}
+
 func rolld20() (roll int) {
 	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
 	roll = r.Intn(19) + 1
