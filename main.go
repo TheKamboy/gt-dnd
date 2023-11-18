@@ -22,9 +22,12 @@ var (
 	armor    int    = 0
 	armore   string = "Nothing" // Display Armor Name
 	strength int    = 0
-	equiped  string = "Stick" // Weapon Name and Damage Checker
-	items           = []string{"Stick"}
+	equiped  string = "Pistol" // Weapon Name and Damage Checker
+	items           = []string{"Stick", "Pistol"}
 )
+
+// Weapons on map
+var pistolonmap = false
 
 // Draw Text with Tcell
 func drawText(s tcell.Screen, x, y int, text string) {
@@ -60,6 +63,34 @@ func rolld4() (roll int) {
 	return
 }
 
+func rolld6() (roll int) {
+	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	roll = r.Intn(5) + 1
+
+	return
+}
+
+func rolld8() (roll int) {
+	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	roll = r.Intn(7) + 1
+
+	return
+}
+
+func rolld10() (roll int) {
+	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	roll = r.Intn(9) + 1
+
+	return
+}
+
+func rolld12() (roll int) {
+	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	roll = r.Intn(11) + 1
+
+	return
+}
+
 func rolld20() (roll int) {
 	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
 	roll = r.Intn(19) + 1
@@ -88,6 +119,11 @@ func startattackplayer(hitchance int) (damage int, hit bool, crit bool, roll int
 			if crit {
 				damage += 1
 			}
+		} else if equiped == "Pistol" {
+			damage = rolld10()
+			if crit {
+				damage += rolld10()
+			}
 		}
 	}
 
@@ -108,7 +144,7 @@ func testmap(s tcell.Screen) {
 	// Enemy
 	ex := 1
 	ey := 1
-	ehp := 1
+	ehp := 10
 
 	// ehp := 10
 	steps := 0
@@ -151,12 +187,20 @@ func testmap(s tcell.Screen) {
 			}
 		}
 
-		if equiped == "Stick" {
-			strength = 1
-		}
-
 		if playerstate == "enemy1" {
-			// damage, hit, crit, roll = startattackplayer(10)
+			damage, hit, crit, _ := startattackplayer(10)
+
+			if hit {
+				if crit {
+					hudtxt = "You got critical hit with a damage of " + strconv.Itoa(damage) + "!"
+				} else {
+					hudtxt = "You got a hit with a damage of " + strconv.Itoa(damage) + "!"
+				}
+
+				ehp -= damage
+			} else {
+				hudtxt = "You missed."
+			}
 
 			// if randnum < 10 {
 			// 	hudtxt = "You missed with a roll of " + strconv.Itoa(randnum) + "."
@@ -172,10 +216,12 @@ func testmap(s tcell.Screen) {
 			// }
 
 			controltxt = "Press any key to continue..."
+
+			playerstate = "waitforkeypress"
 		}
 
 		if playerstate == "choose" {
-			controltxt = "[m]ove [a]ttack [s]tats [i]nventory [e]nd turn"
+			controltxt = "[m]ove [a]ttack/action [s]tats [i]nventory [e]nd turn"
 			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Weapon: " + equiped + ", Status: Choosing Action"
 		} else if playerstate == "move" {
 			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Status: Moving"
@@ -186,7 +232,7 @@ func testmap(s tcell.Screen) {
 		}
 
 		if playerstate == "choose" && steps == 6 {
-			controltxt = "[a]ttack [s]tats [i]nventory [e]nd turn"
+			controltxt = "[a]ttack/action [s]tats [i]nventory [e]nd turn"
 		}
 
 		if playerstate == "youcannotreach" {
@@ -242,84 +288,95 @@ func testmap(s tcell.Screen) {
 					s.Fini()
 					os.Exit(0)
 				}
-				if ev.Rune() == 'm' {
-					if playerstate != "move" && steps != 6 {
-						// moving
-						playerstate = "move"
-					} else if playerstate == "move" {
-						playerstate = "choose"
-					}
-				} else if ev.Rune() == 'a' {
-					// attack or move in moving state
-					if playerstate == "move" {
-						bx = x
-						by = y
-						x -= 1
-						steps += 1
-						playerstate = "moved"
-					} else if playerstate != "attack" {
-						ax = ex
-						ay = ey
-						if !(ehp <= 0) {
-							playerstate = "attack"
-						} else {
-							playerstate = "noenemy"
-						}
-					}
-				} else if ev.Rune() == 's' {
-					// check stats or move in moving state
-					if playerstate == "move" {
-						bx = x
-						by = y
-						y += 1
-						steps += 1
-						playerstate = "moved"
-					} else {
 
-					}
-				} else if ev.Rune() == 'd' {
-					// for moving
-					if playerstate == "move" {
-						bx = x
-						by = y
-						x += 1
-						steps += 1
-						playerstate = "moved"
-					}
-				} else if ev.Rune() == 'w' {
-					// for moving
-					if playerstate == "move" {
-						bx = x
-						by = y
-						y -= 1
-						steps += 1
-						playerstate = "moved"
-					}
-				} else if ev.Rune() == 'n' {
-					if playerstate == "attack" {
-						playerstate = "choose"
-					}
-				} else if ev.Rune() == 'y' {
-					if playerstate == "attack" {
-						cantreach := false
-						if ex == 1 && ey == 1 {
-							if x == 1 || x == 2 {
-								if y == 1 || y == 2 {
-									playerstate = "enemy1"
-								} else {
-									cantreach = true
-								}
+				if playerstate != "waitforkeypress" {
+					if ev.Rune() == 'm' {
+						if playerstate != "move" && steps != 6 {
+							// moving
+							playerstate = "move"
+						} else if playerstate == "move" {
+							playerstate = "choose"
+						}
+					} else if ev.Rune() == 'a' {
+						// attack or move in moving state
+						if playerstate == "move" {
+							bx = x
+							by = y
+							x -= 1
+							steps += 1
+							playerstate = "moved"
+						} else if playerstate != "attack" {
+							ax = ex
+							ay = ey
+							if !(ehp <= 0) {
+								playerstate = "attack"
 							} else {
-								cantreach = true
+								playerstate = "noenemy"
 							}
 						}
+					} else if ev.Rune() == 's' {
+						// check stats or move in moving state
+						if playerstate == "move" {
+							bx = x
+							by = y
+							y += 1
+							steps += 1
+							playerstate = "moved"
+						} else {
 
-						if cantreach {
-							playerstate = "youcannotreach"
 						}
+					} else if ev.Rune() == 'd' {
+						// for moving
+						if playerstate == "move" {
+							bx = x
+							by = y
+							x += 1
+							steps += 1
+							playerstate = "moved"
+						}
+					} else if ev.Rune() == 'w' {
+						// for moving
+						if playerstate == "move" {
+							bx = x
+							by = y
+							y -= 1
+							steps += 1
+							playerstate = "moved"
+						}
+					} else if ev.Rune() == 'n' {
+						if playerstate == "attack" {
+							playerstate = "choose"
+						}
+					} else if ev.Rune() == 'y' {
+						if playerstate == "attack" {
+							cantreach := false
+							if ex == 1 && ey == 1 {
+								if x == 1 || x == 2 {
+									if y == 1 || y == 2 {
+										playerstate = "enemy1"
+									} else {
+										if equiped != "Pistol" {
+											cantreach = true
+										} else {
+											playerstate = "enemy1"
+										}
+									}
+								} else {
+									if equiped != "Pistol" {
+										cantreach = true
+									} else {
+										playerstate = "enemy1"
+									}
+								}
+							}
+
+							if cantreach {
+								playerstate = "youcannotreach"
+							}
+						}
+					} else if ev.Rune() == 'e' {
+						playerstate = "idle"
 					}
-				} else if ev.Rune() == 'e' {
-					playerstate = "idle"
 				}
 			}
 
