@@ -35,7 +35,7 @@ func drawText(s tcell.Screen, x, y int, text string) {
 	col := x
 	defStyle := tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
 
-	for _, r := range []rune(text) {
+	for _, r := range string(text) {
 		s.SetContent(col, row, r, nil, defStyle)
 		col++
 	}
@@ -46,14 +46,13 @@ func drawTextStyle(s tcell.Screen, x, y int, style tcell.Style, text string) {
 	row := y
 	col := x
 
-	for _, r := range []rune(text) {
+	for _, r := range string(text) {
 		s.SetContent(col, row, r, nil, style)
 		col++
 	}
 }
 
 func yourstats(s tcell.Screen, strength int, equiped string) {
-
 }
 
 func rolld4() (roll int) {
@@ -99,20 +98,20 @@ func rolld20() (roll int) {
 }
 
 func startattackplayer(hitchance int) (damage int, hit bool, crit bool, roll int) {
-	//r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	// r := rand.New(rand.NewSource(time.Now().UnixMicro()))
 	roll = rolld20()
 
 	if roll < hitchance {
 		hit = false
 		damage = 0
-	} else if roll == 20 {
+	} else if roll != 20 {
 		hit = true
-		crit = true
 	} else {
 		hit = true
+		crit = true
 	}
 
-	if hit == true {
+	if hit {
 		// Check weapon
 		if equiped == "Stick" {
 			damage = 1
@@ -153,18 +152,19 @@ func testmap(s tcell.Screen) {
 	playerstate = "choose"
 	beingattacked := false
 
-	//r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	// r := rand.New(rand.NewSource(time.Now().UnixMicro()))
 
 	println(bx, by)
 	for {
-		//r = rand.New(rand.NewSource(time.Now().UnixMicro()))
+		// r = rand.New(rand.NewSource(time.Now().UnixMicro()))
 
 		if playerstate == "idle" {
 			steps = 0
 			enemyhit := false
+
 			if x == 1 || x == 2 {
 				if y == 1 || y == 2 {
-					if !(ehp <= 0) {
+					if ehp > 0 {
 						enemyhit = true
 					}
 				}
@@ -173,12 +173,12 @@ func testmap(s tcell.Screen) {
 			if enemyhit {
 				hudtxt = "The enemy cutout falls over, and cuts you. You lost 1 HP (but you have infinity health)."
 			} else {
-				if !(ehp <= 0) {
+				if ehp > 0 {
 					hudtxt = "The enemy cutout cannot do anything to you."
 				}
 			}
 
-			if !(ehp <= 0) {
+			if ehp > 0 {
 				controltxt = "Press any key to continue..."
 				playerstate = "waitforkeypress"
 				beingattacked = true
@@ -255,7 +255,7 @@ func testmap(s tcell.Screen) {
 		drawText(s, 0, 4, "------")
 		drawText(s, x, y, "K")
 
-		if !(ehp <= 0) {
+		if ehp > 0 {
 			drawTextStyle(s, ex, ey, aimingstyle, "B")
 		}
 
@@ -308,7 +308,7 @@ func testmap(s tcell.Screen) {
 						} else if playerstate != "attack" {
 							ax = ex
 							ay = ey
-							if !(ehp <= 0) {
+							if ehp > 0 {
 								playerstate = "attack"
 							} else {
 								playerstate = "noenemy"
@@ -323,7 +323,6 @@ func testmap(s tcell.Screen) {
 							steps += 1
 							playerstate = "moved"
 						} else {
-
 						}
 					} else if ev.Rune() == 'd' {
 						// for moving
@@ -403,9 +402,11 @@ func testmap(s tcell.Screen) {
 					steps -= 1
 				}
 				if x == 1 && y == 1 {
-					x = bx
-					y = by
-					steps -= 1
+					if ehp <= 0 {
+						x = bx
+						y = by
+						steps -= 1
+					}
 				}
 
 				if steps != 6 {
