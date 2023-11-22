@@ -22,8 +22,12 @@ var (
 	armor    int    = 0
 	armore   string = "Nothing" // Display Armor Name
 	strength int    = 0
-	equiped  string = "Stick" // Weapon Name and Damage Checker
+	equiped  string = "Pistol" // Weapon Name and Damage Checker
+	items           = []string{"Stick", "Pistol"}
 )
+
+// Weapons on map
+var pistolonmap = false
 
 // Draw Text with Tcell
 func drawText(s tcell.Screen, x, y int, text string) {
@@ -31,7 +35,7 @@ func drawText(s tcell.Screen, x, y int, text string) {
 	col := x
 	defStyle := tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
 
-	for _, r := range []rune(text) {
+	for _, r := range string(text) {
 		s.SetContent(col, row, r, nil, defStyle)
 		col++
 	}
@@ -42,18 +46,87 @@ func drawTextStyle(s tcell.Screen, x, y int, style tcell.Style, text string) {
 	row := y
 	col := x
 
-	for _, r := range []rune(text) {
+	for _, r := range string(text) {
 		s.SetContent(col, row, r, nil, style)
 		col++
 	}
 }
 
 func yourstats(s tcell.Screen, strength int, equiped string) {
-
 }
 
-func attackdamage() {
+func rolld4() (roll int) {
+	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	roll = r.Intn(3) + 1
 
+	return
+}
+
+func rolld6() (roll int) {
+	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	roll = r.Intn(5) + 1
+
+	return
+}
+
+func rolld8() (roll int) {
+	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	roll = r.Intn(7) + 1
+
+	return
+}
+
+func rolld10() (roll int) {
+	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	roll = r.Intn(9) + 1
+
+	return
+}
+
+func rolld12() (roll int) {
+	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	roll = r.Intn(11) + 1
+
+	return
+}
+
+func rolld20() (roll int) {
+	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	roll = r.Intn(19) + 1
+
+	return
+}
+
+func startattackplayer(hitchance int) (damage int, hit bool, crit bool, roll int) {
+	// r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	roll = rolld20()
+
+	if roll < hitchance {
+		hit = false
+		damage = 0
+	} else if roll != 20 {
+		hit = true
+	} else {
+		hit = true
+		crit = true
+	}
+
+	if hit {
+		// Check weapon
+		if equiped == "Stick" {
+			damage = 1
+			if crit {
+				damage += 1
+			}
+		} else if equiped == "Pistol" {
+			damage = rolld10()
+			if crit {
+				damage += rolld10()
+			}
+		}
+	}
+
+	return
 }
 
 func testmap(s tcell.Screen) {
@@ -62,7 +135,6 @@ func testmap(s tcell.Screen) {
 	y := 3
 	bx := x
 	by := y
-	//rollfordamage := false
 
 	// Keegan Aim
 	ax := x
@@ -71,7 +143,7 @@ func testmap(s tcell.Screen) {
 	// Enemy
 	ex := 1
 	ey := 1
-	ehp := 1
+	ehp := 10
 
 	// ehp := 10
 	steps := 0
@@ -80,18 +152,19 @@ func testmap(s tcell.Screen) {
 	playerstate = "choose"
 	beingattacked := false
 
-	r := rand.New(rand.NewSource(time.Now().UnixMicro()))
+	// r := rand.New(rand.NewSource(time.Now().UnixMicro()))
 
 	println(bx, by)
 	for {
-		r = rand.New(rand.NewSource(time.Now().UnixMicro()))
+		// r = rand.New(rand.NewSource(time.Now().UnixMicro()))
 
 		if playerstate == "idle" {
 			steps = 0
 			enemyhit := false
+
 			if x == 1 || x == 2 {
 				if y == 1 || y == 2 {
-					if !(ehp <= 0) {
+					if ehp > 0 {
 						enemyhit = true
 					}
 				}
@@ -100,12 +173,12 @@ func testmap(s tcell.Screen) {
 			if enemyhit {
 				hudtxt = "The enemy cutout falls over, and cuts you. You lost 1 HP (but you have infinity health)."
 			} else {
-				if !(ehp <= 0) {
+				if ehp > 0 {
 					hudtxt = "The enemy cutout cannot do anything to you."
 				}
 			}
 
-			if !(ehp <= 0) {
+			if ehp > 0 {
 				controltxt = "Press any key to continue..."
 				playerstate = "waitforkeypress"
 				beingattacked = true
@@ -114,31 +187,41 @@ func testmap(s tcell.Screen) {
 			}
 		}
 
-		if equiped == "Stick" {
-			strength = 1
-		}
-
 		if playerstate == "enemy1" {
-			randnum := r.Intn(19) + 1
+			damage, hit, crit, _ := startattackplayer(10)
 
-			if randnum < 10 {
-				hudtxt = "You missed with a roll of " + strconv.Itoa(randnum) + "."
-				playerstate = "waitforkeypress"
-			} else if randnum == 20 {
-				hudtxt = "You got critical hit with a damage of " + strconv.Itoa(strength+4) + "!"
-				playerstate = "waitforkeypress"
-				ehp -= strength + 4
+			if hit {
+				if crit {
+					hudtxt = "You got critical hit with a damage of " + strconv.Itoa(damage) + "!"
+				} else {
+					hudtxt = "You got a hit with a damage of " + strconv.Itoa(damage) + "!"
+				}
+
+				ehp -= damage
 			} else {
-				hudtxt = "You got a hit with a damage of " + strconv.Itoa(strength) + "!"
-				playerstate = "waitforkeypress"
-				ehp -= strength
+				hudtxt = "You missed."
 			}
 
+			// if randnum < 10 {
+			// 	hudtxt = "You missed with a roll of " + strconv.Itoa(randnum) + "."
+			// 	playerstate = "waitforkeypress"
+			// } else if randnum == 20 {
+			// 	hudtxt = "You got critical hit with a damage of " + strconv.Itoa(strength+4) + "!"
+			// 	playerstate = "waitforkeypress"
+			// 	ehp -= strength + 4
+			// } else {
+			// 	hudtxt = "You got a hit with a damage of " + strconv.Itoa(strength) + "!"
+			// 	playerstate = "waitforkeypress"
+			// 	ehp -= strength
+			// }
+
 			controltxt = "Press any key to continue..."
+
+			playerstate = "waitforkeypress"
 		}
 
 		if playerstate == "choose" {
-			controltxt = "[m]ove [a]ttack [s]tats [i]nventory [e]nd turn"
+			controltxt = "[m]ove [a]ttack/action [s]tats [i]nventory [e]nd turn"
 			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Weapon: " + equiped + ", Status: Choosing Action"
 		} else if playerstate == "move" {
 			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Status: Moving"
@@ -149,7 +232,7 @@ func testmap(s tcell.Screen) {
 		}
 
 		if playerstate == "choose" && steps == 6 {
-			controltxt = "[a]ttack [s]tats [i]nventory [e]nd turn"
+			controltxt = "[a]ttack/action [s]tats [i]nventory [e]nd turn"
 		}
 
 		if playerstate == "youcannotreach" {
@@ -172,7 +255,7 @@ func testmap(s tcell.Screen) {
 		drawText(s, 0, 4, "------")
 		drawText(s, x, y, "K")
 
-		if !(ehp <= 0) {
+		if ehp > 0 {
 			drawTextStyle(s, ex, ey, aimingstyle, "B")
 		}
 
@@ -205,84 +288,94 @@ func testmap(s tcell.Screen) {
 					s.Fini()
 					os.Exit(0)
 				}
-				if ev.Rune() == 'm' {
-					if playerstate != "move" && steps != 6 {
-						// moving
-						playerstate = "move"
-					} else if playerstate == "move" {
-						playerstate = "choose"
-					}
-				} else if ev.Rune() == 'a' {
-					// attack or move in moving state
-					if playerstate == "move" {
-						bx = x
-						by = y
-						x -= 1
-						steps += 1
-						playerstate = "moved"
-					} else if playerstate != "attack" {
-						ax = ex
-						ay = ey
-						if !(ehp <= 0) {
-							playerstate = "attack"
-						} else {
-							playerstate = "noenemy"
-						}
-					}
-				} else if ev.Rune() == 's' {
-					// check stats or move in moving state
-					if playerstate == "move" {
-						bx = x
-						by = y
-						y += 1
-						steps += 1
-						playerstate = "moved"
-					} else {
 
-					}
-				} else if ev.Rune() == 'd' {
-					// for moving
-					if playerstate == "move" {
-						bx = x
-						by = y
-						x += 1
-						steps += 1
-						playerstate = "moved"
-					}
-				} else if ev.Rune() == 'w' {
-					// for moving
-					if playerstate == "move" {
-						bx = x
-						by = y
-						y -= 1
-						steps += 1
-						playerstate = "moved"
-					}
-				} else if ev.Rune() == 'n' {
-					if playerstate == "attack" {
-						playerstate = "choose"
-					}
-				} else if ev.Rune() == 'y' {
-					if playerstate == "attack" {
-						cantreach := false
-						if ex == 1 && ey == 1 {
-							if x == 1 || x == 2 {
-								if y == 1 || y == 2 {
-									playerstate = "enemy1"
-								} else {
-									cantreach = true
-								}
+				if playerstate != "waitforkeypress" {
+					if ev.Rune() == 'm' {
+						if playerstate != "move" && steps != 6 {
+							// moving
+							playerstate = "move"
+						} else if playerstate == "move" {
+							playerstate = "choose"
+						}
+					} else if ev.Rune() == 'a' {
+						// attack or move in moving state
+						if playerstate == "move" {
+							bx = x
+							by = y
+							x -= 1
+							steps += 1
+							playerstate = "moved"
+						} else if playerstate != "attack" {
+							ax = ex
+							ay = ey
+							if ehp > 0 {
+								playerstate = "attack"
 							} else {
-								cantreach = true
+								playerstate = "noenemy"
 							}
 						}
-
-						if cantreach {
-							playerstate = "youcannotreach"
+					} else if ev.Rune() == 's' {
+						// check stats or move in moving state
+						if playerstate == "move" {
+							bx = x
+							by = y
+							y += 1
+							steps += 1
+							playerstate = "moved"
+						} else {
 						}
+					} else if ev.Rune() == 'd' {
+						// for moving
+						if playerstate == "move" {
+							bx = x
+							by = y
+							x += 1
+							steps += 1
+							playerstate = "moved"
+						}
+					} else if ev.Rune() == 'w' {
+						// for moving
+						if playerstate == "move" {
+							bx = x
+							by = y
+							y -= 1
+							steps += 1
+							playerstate = "moved"
+						}
+					} else if ev.Rune() == 'n' {
+						if playerstate == "attack" {
+							playerstate = "choose"
+						}
+					} else if ev.Rune() == 'y' {
+						if playerstate == "attack" {
+							cantreach := false
+							if ex == 1 && ey == 1 {
+								if x == 1 || x == 2 {
+									if y == 1 || y == 2 {
+										playerstate = "enemy1"
+									} else {
+										if equiped != "Pistol" {
+											cantreach = true
+										} else {
+											playerstate = "enemy1"
+										}
+									}
+								} else {
+									if equiped != "Pistol" {
+										cantreach = true
+									} else {
+										playerstate = "enemy1"
+									}
+								}
+							}
+
+							if cantreach {
+								playerstate = "youcannotreach"
+							}
+						}
+					} else if ev.Rune() == 'e' {
+						playerstate = "idle"
 					}
-				} else if ev.Rune() == 'e' {
-					playerstate = "idle"
 				}
 			}
 
@@ -309,9 +402,11 @@ func testmap(s tcell.Screen) {
 					steps -= 1
 				}
 				if x == 1 && y == 1 {
-					x = bx
-					y = by
-					steps -= 1
+					if ehp <= 0 {
+						x = bx
+						y = by
+						steps -= 1
+					}
 				}
 
 				if steps != 6 {
