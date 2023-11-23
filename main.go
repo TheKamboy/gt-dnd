@@ -10,20 +10,26 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-var aimingstyle tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorRed)
+// Styles
+var (
+	aimingstyle  tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorRed)
+	commentstyle tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorGray).Italic(true)
+)
 
 // choose = choosing action, waitforkeypress = Wait for Key Press, idle = not player turn, move = moving action, moved = just moved a step (for checking barriers), attack = attack action, youcannotreach = show cannot reach msg, enemy# = attack enemy, moveattack = aim attack, movedattack = choose aim attack, noenemy = show no enemy msg, inventory = view inventory
 var playerstate string = "choose"
 
 // Keegan's Stats
 var (
-	hp       int    = 10
-	maxhp    int    = 10
-	armor    int    = 0
-	armore   string = "Nothing" // Display Armor Name
-	strength int    = 0
-	equiped  string = "Pistol" // Weapon Name and Damage Checker
-	items           = []string{"Stick", "Pistol"}
+	hp        int    = 10
+	maxhp     int    = 10
+	armor     int    = 0
+	armorname string = "Military Clothes" // Display Armor Name
+	strength  int    = 0
+	equiped   string = "Pistol" // Weapon Name and Damage Checker
+	items            = []string{"Stick", "Pistol"}
+	firstname string = "Keegan"
+	lastname  string = "Miller"
 )
 
 // Weapons on map
@@ -52,7 +58,73 @@ func drawTextStyle(s tcell.Screen, x, y int, style tcell.Style, text string) {
 	}
 }
 
-func yourstats(s tcell.Screen, strength int, equiped string) {
+func stats_help(s tcell.Screen) {
+	s.Clear()
+	drawText(s, 0, 0, "Stats:")
+	drawText(s, 0, 2, "Stats show many things that have to do with your character.")
+	drawText(s, 0, 4, "Example of a stat:")
+	drawText(s, 0, 6, "Weapon (Damage): Pistol (💥󰇏 10)")
+	drawText(s, 0, 8, "Press any key to continue...")
+
+	s.Show()
+
+	// Poll event
+	s.PollEvent()
+
+	s.Clear()
+	drawText(s, 0, 0, "Symbols:")
+	drawText(s, 0, 2, "💥  : Damage Number Indicator")
+	drawText(s, 0, 3, "󰇏  : Weapon rolls dice (based on damage amount)")
+	drawText(s, 0, 4, "#󰇏 : Weapon rolls a # amount of dice (based on damage amount)")
+	drawText(s, 0, 5, "  : Armor Number Indicator")
+	drawText(s, 0, 7, "Press any key to quit help...")
+
+	// Update screen
+	s.Show()
+
+	// Poll event
+	s.PollEvent()
+}
+
+func yourstats(s tcell.Screen) {
+	dicesymbol := " "
+
+	if equiped == "Pistol" {
+		dicesymbol = "󰇏 "
+	}
+
+	statsdisplay := func() {
+		s.Clear()
+		drawText(s, 0, 0, "Name: "+firstname+" "+lastname)
+		drawText(s, 0, 2, "Health: "+strconv.Itoa(hp)+"/"+strconv.Itoa(maxhp))
+		drawText(s, 0, 3, "Weapon (Damage): "+equiped+" (💥"+dicesymbol+strconv.Itoa(strength)+")")
+		drawText(s, 0, 4, "Armor (Defense): "+armorname+" ( "+strconv.Itoa(armor)+")")
+		drawText(s, 0, 10, "Press ? for help, or any other key to go back...")
+	}
+
+	statsdisplay()
+
+	for {
+		// Update screen
+		s.Show()
+
+		// Poll event
+		ev := s.PollEvent()
+
+		// Process event
+		switch ev := ev.(type) {
+		case *tcell.EventResize:
+			s.Sync()
+		case *tcell.EventKey:
+			if ev.Rune() == '?' {
+				stats_help(s)
+				statsdisplay()
+				s.Show()
+			} else {
+				return
+			}
+		}
+	}
 }
 
 func rolld4() (roll int) {
@@ -323,6 +395,7 @@ func testmap(s tcell.Screen) {
 							steps += 1
 							playerstate = "moved"
 						} else {
+							yourstats(s)
 						}
 					} else if ev.Rune() == 'd' {
 						// for moving
