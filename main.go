@@ -74,7 +74,7 @@ func stats_help(s tcell.Screen) {
 	s.Clear()
 	drawText(s, 0, 0, "Symbols:")
 	drawText(s, 0, 2, "💥  : Damage Number Indicator")
-	drawText(s, 0, 3, "󰇏  : Weapon rolls dice (based on damage amount)")
+	drawText(s, 0, 3, "󰇏  : Weapon rolls dice (based on damage amount, ex. 10 damage would be a d10)")
 	drawText(s, 0, 4, "#󰇏 : Weapon rolls a # amount of dice (based on damage amount)")
 	drawText(s, 0, 5, "  : Armor Number Indicator")
 	drawText(s, 0, 7, "Press any key to quit help...")
