@@ -5,4 +5,5 @@ It uses DND elements, but works differently from it.
 
 * Requirements
 - Nerd Font
+
   You are going to need a nerd font to play because I use symbols that are in nerd fonts.
