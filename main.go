@@ -21,15 +21,15 @@ var playerstate string = "choose"
 
 // Keegan's Stats
 var (
-	hp        int    = 10
-	maxhp     int    = 10
-	armor     int    = 0
-	armorname string = "Military Clothes" // Display Armor Name
-	strength  int    = 0
-	equiped   string = "Pistol" // Weapon Name and Damage Checker
-	items            = []string{"Stick", "Pistol"}
-	firstname string = "Keegan"
-	lastname  string = "Miller"
+	hp         int    = 10
+	maxhp      int    = 10
+	armor      int    = 0
+	armorname  string = "Military Clothes" // Display Armor Name
+	strength   int    = 10
+	weaponname string = "Pistol" // Weapon Name and Damage Checker
+	items             = []string{"Stick", "Pistol"}
+	firstname  string = "Keegan"
+	lastname   string = "Miller"
 )
 
 // Weapons on map
@@ -63,7 +63,7 @@ func stats_help(s tcell.Screen) {
 	drawText(s, 0, 0, "Stats:")
 	drawText(s, 0, 2, "Stats show many things that have to do with your character.")
 	drawText(s, 0, 4, "Example of a stat:")
-	drawText(s, 0, 6, "Weapon (Damage): Pistol (💥󰇏 10)")
+	drawText(s, 0, 6, "Weapon (Damage): Pistol (󰇏 💥10)")
 	drawText(s, 0, 8, "Press any key to continue...")
 
 	s.Show()
@@ -87,22 +87,22 @@ func stats_help(s tcell.Screen) {
 }
 
 func yourstats(s tcell.Screen) {
-	dicesymbol := " "
+	dicesymbol := ""
 
-	if equiped == "Pistol" {
+	if weaponname == "Pistol" {
 		dicesymbol = "󰇏 "
 	}
 
-	statsdisplay := func() {
+	statsdisplay := func(dice string) {
 		s.Clear()
 		drawText(s, 0, 0, "Name: "+firstname+" "+lastname)
 		drawText(s, 0, 2, "Health: "+strconv.Itoa(hp)+"/"+strconv.Itoa(maxhp))
-		drawText(s, 0, 3, "Weapon (Damage): "+equiped+" (💥"+dicesymbol+strconv.Itoa(strength)+")")
+		drawText(s, 0, 3, "Weapon (Damage): "+weaponname+" ("+dice+"💥 "+strconv.Itoa(strength)+")")
 		drawText(s, 0, 4, "Armor (Defense): "+armorname+" ( "+strconv.Itoa(armor)+")")
-		drawText(s, 0, 10, "Press ? for help, or any other key to go back...")
+		drawText(s, 0, 6, "Press ? for help, or any other key to go back...")
 	}
 
-	statsdisplay()
+	statsdisplay(dicesymbol)
 
 	for {
 		// Update screen
@@ -118,7 +118,7 @@ func yourstats(s tcell.Screen) {
 		case *tcell.EventKey:
 			if ev.Rune() == '?' {
 				stats_help(s)
-				statsdisplay()
+				statsdisplay(dicesymbol)
 				s.Show()
 			} else {
 				return
@@ -185,12 +185,12 @@ func startattackplayer(hitchance int) (damage int, hit bool, crit bool, roll int
 
 	if hit {
 		// Check weapon
-		if equiped == "Stick" {
+		if weaponname == "Stick" {
 			damage = 1
 			if crit {
 				damage += 1
 			}
-		} else if equiped == "Pistol" {
+		} else if weaponname == "Pistol" {
 			damage = rolld10()
 			if crit {
 				damage += rolld10()
@@ -294,12 +294,12 @@ func testmap(s tcell.Screen) {
 
 		if playerstate == "choose" {
 			controltxt = "[m]ove [a]ttack/action [s]tats [i]nventory [e]nd turn"
-			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Weapon: " + equiped + ", Status: Choosing Action"
+			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Weapon: " + weaponname + ", Status: Choosing Action"
 		} else if playerstate == "move" {
 			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Status: Moving"
 			controltxt = "Steps: " + strconv.Itoa(steps) + "/6"
 		} else if playerstate == "attack" {
-			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Weapon: " + equiped + ", Status: Attacking"
+			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Weapon: " + weaponname + ", Status: Attacking"
 			controltxt = "Attack Here? (y/n)"
 		}
 
@@ -427,14 +427,14 @@ func testmap(s tcell.Screen) {
 									if y == 1 || y == 2 {
 										playerstate = "enemy1"
 									} else {
-										if equiped != "Pistol" {
+										if weaponname != "Pistol" {
 											cantreach = true
 										} else {
 											playerstate = "enemy1"
 										}
 									}
 								} else {
-									if equiped != "Pistol" {
+									if weaponname != "Pistol" {
 										cantreach = true
 									} else {
 										playerstate = "enemy1"
