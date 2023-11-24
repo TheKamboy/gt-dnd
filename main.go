@@ -14,6 +14,7 @@ import (
 var (
 	aimingstyle  tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorRed)
 	commentstyle tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorGray).Italic(true)
+	grassstyle   tcell.Style = tcell.StyleDefault.Background(tcell.ColorGreen).Foreground(tcell.ColorReset)
 )
 
 // choose = choosing action, waitforkeypress = Wait for Key Press, idle = not player turn, move = moving action, moved = just moved a step (for checking barriers), attack = attack action, youcannotreach = show cannot reach msg, enemy# = attack enemy, moveattack = aim attack, movedattack = choose aim attack, noenemy = show no enemy msg, inventory = view inventory
@@ -31,6 +32,65 @@ var (
 	firstname  string = "Keegan"
 	lastname   string = "Miller"
 )
+
+type maphandle struct {
+	givengrounds []string
+	givenx       []int
+	giveny       []int
+	blockx       []int
+	blocky       []int
+}
+
+// Adds Ground Type to Map
+func (m *maphandle) AddObj(objtype string, x int, y int) {
+	m.givengrounds = append(m.givengrounds, objtype)
+	m.givenx = append(m.givenx, x)
+	m.giveny = append(m.giveny, y)
+
+	if objtype == "horiwall" || objtype == "vertwall" || objtype == "enemy" {
+		m.blockx = append(m.blockx, x)
+		m.blocky = append(m.blocky, y)
+	}
+}
+
+func (m maphandle) Show(s tcell.Screen) {
+	blocki := 0
+	i := 0
+
+	for i < len(m.givengrounds) {
+		if m.givengrounds[i] == "horiwall" {
+			drawText(s, m.blockx[blocki], m.blocky[blocki], "-")
+			blocki++
+		} else if m.givengrounds[i] == "vertwall" {
+			drawText(s, m.blockx[blocki], m.blocky[blocki], "|")
+			blocki++
+		} else if m.givengrounds[i] == "g" || m.givengrounds[i] == "grass" {
+			drawTextStyle(s, m.givenx[i], m.giveny[i], grassstyle, " ")
+		} else if m.givengrounds[i] == "enemy" {
+			drawTextStyle(s, m.blockx[blocki], m.blocky[blocki], aimingstyle, "B")
+			blocki++
+		}
+		i++
+	}
+}
+
+func (m maphandle) CoordIsCollide(x int, y int) (collide bool) {
+	i := 0
+	collide = false
+
+	for i < len(m.blockx) {
+		if m.blockx[i] == x {
+			if m.blocky[i] == y {
+				collide = true
+				return
+			}
+		}
+
+		i++
+	}
+
+	return
+}
 
 // Weapons on map
 var pistolonmap = false
@@ -229,6 +289,7 @@ func testmap(s tcell.Screen) {
 	println(bx, by)
 	for {
 		// r = rand.New(rand.NewSource(time.Now().UnixMicro()))
+		gamemap := maphandle{}
 
 		if playerstate == "idle" {
 			steps = 0
@@ -320,16 +381,26 @@ func testmap(s tcell.Screen) {
 		}
 
 		s.Clear()
-		drawText(s, 0, 0, "------")
-		drawText(s, 0, 1, "|    |")
-		drawText(s, 0, 2, "|    |")
-		drawText(s, 0, 3, "|    |")
-		drawText(s, 0, 4, "------")
-		drawText(s, x, y, "K")
+		for i := 0; i <= 5; i++ {
+			gamemap.AddObj("horiwall", i, 0)
+			gamemap.AddObj("horiwall", i, 4)
+		}
+		for i := 1; i <= 3; i++ {
+			gamemap.AddObj("vertwall", 0, i)
+			gamemap.AddObj("vertwall", 5, i)
+		}
 
 		if ehp > 0 {
-			drawTextStyle(s, ex, ey, aimingstyle, "B")
+			gamemap.AddObj("enemy", ex, ey)
 		}
+
+		gamemap.Show(s)
+		// drawText(s, 0, 0, "------")
+		// drawText(s, 0, 1, "|    |")
+		// drawText(s, 0, 2, "|    |")
+		// drawText(s, 0, 3, "|    |")
+		// drawText(s, 0, 4, "------")
+		drawText(s, x, y, "K")
 
 		if playerstate == "attack" {
 			drawTextStyle(s, ax, ay, aimingstyle, "+")
@@ -458,29 +529,36 @@ func testmap(s tcell.Screen) {
 
 			if playerstate == "moved" {
 				// Barriers Checks here
-				if x == 0 {
-					x += 1
-					steps -= 1
+
+				if gamemap.CoordIsCollide(x, y) {
+					x = bx
+					y = by
+					steps--
 				}
-				if y == 0 {
-					y += 1
-					steps -= 1
-				}
-				if x == 5 {
-					x -= 1
-					steps -= 1
-				}
-				if y == 4 {
-					y -= 1
-					steps -= 1
-				}
-				if x == 1 && y == 1 {
-					if ehp <= 0 {
-						x = bx
-						y = by
-						steps -= 1
-					}
-				}
+
+				// if x == 0 {
+				// 	x += 1
+				// 	steps -= 1
+				// }
+				// if y == 0 {
+				// 	y += 1
+				// 	steps -= 1
+				// }
+				// if x == 5 {
+				// 	x -= 1
+				// 	steps -= 1
+				// }
+				// if y == 4 {
+				// 	y -= 1
+				// 	steps -= 1
+				// }
+				// if x == 1 && y == 1 {
+				// 	if ehp <= 0 {
+				// 		x = bx
+				// 		y = by
+				// 		steps -= 1
+				// 	}
+				// }
 
 				if steps != 6 {
 					playerstate = "move"
