@@ -117,6 +117,60 @@ func (m maphandle) GroundType(x int, y int) (groundtype string) {
 	return
 }
 
+func (m maphandle) EnemyMove(ex int, ey int, x int, y int) (nex int, ney int) {
+	// 2 means unused
+	leftright := 2
+	updown := 2
+
+	steps := 0
+
+	if x > ex {
+		leftright = 1
+	} else if x < ex {
+		leftright = 0
+	}
+
+	if y > ey {
+		updown = 1
+	} else if y < ey {
+		updown = 0
+	}
+
+	for steps < 6 {
+		exb := ex
+		eyb := ey
+
+		if leftright == 0 {
+			ex--
+			steps++
+		} else if leftright == 1 {
+			ex++
+			steps++
+		}
+
+		if m.CoordIsCollide(ex, ey) {
+			ex = exb
+		}
+
+		if updown == 0 {
+			ey++
+			steps++
+		} else if updown == 1 {
+			ey--
+			steps++
+		}
+
+		if m.CoordIsCollide(ex, ey) {
+			ey = eyb
+		}
+	}
+
+	nex = ex
+	ney = ey
+
+	return
+}
+
 // probably goint to be unused, but could be helpful for other projects
 func (m *maphandle) RemoveObj(x int, y int) {
 	i := 0
@@ -365,12 +419,17 @@ func testmap(s tcell.Screen) {
 	ey := 1
 	ehp := 10
 
+	// Enemy Move
+	nex := ex
+	ney := ey
+
 	// ehp := 10
 	steps := 0
 	controltxt := ""
 	hudtxt := ""
 	playerstate = "choose"
 	beingattacked := false
+	// enemymoving := false
 
 	// r := rand.New(rand.NewSource(time.Now().UnixMicro()))
 
@@ -383,13 +442,13 @@ func testmap(s tcell.Screen) {
 			steps = 0
 			enemyhit := false
 
-			if x == 1 || x == 2 {
-				if y == 1 || y == 2 {
-					if ehp > 0 {
-						enemyhit = true
-					}
-				}
-			}
+			// if x == 1 || x == 2 {
+			// 	if y == 1 || y == 2 {
+			// 		if ehp > 0 {
+			// 			enemyhit = true
+			// 		}
+			// 	}
+			// }
 
 			if enemyhit {
 				hudtxt = "The enemy cutout falls over, and cuts you. You lost 1 HP (but you have infinity health)."
@@ -471,9 +530,9 @@ func testmap(s tcell.Screen) {
 		s.Clear()
 		for i := 0; i <= 5; i++ {
 			gamemap.AddObj("horiwall", i, 0)
-			gamemap.AddObj("horiwall", i, 4)
+			gamemap.AddObj("horiwall", i, 10)
 		}
-		for i := 1; i <= 3; i++ {
+		for i := 1; i <= 9; i++ {
 			gamemap.AddObj("vertwall", 0, i)
 			gamemap.AddObj("vertwall", 5, i)
 		}
@@ -497,10 +556,10 @@ func testmap(s tcell.Screen) {
 		}
 
 		// Draw HUD
-		drawText(s, 0, 6, hudtxt)
+		drawText(s, 0, 12, hudtxt)
 
 		// Draw Controls
-		drawText(s, 0, 8, controltxt)
+		drawText(s, 0, 14, controltxt)
 
 		s.Sync()
 
