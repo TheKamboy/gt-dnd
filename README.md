@@ -7,7 +7,9 @@ It uses DND elements, but works differently from it.
 
 ## Requirements
 
-- Nerd Font
+### Nerd Font
 
-  You are going to need a nerd font to play because I use symbols that are in
-  nerd fonts.
+Nerd Fonts are fonts that have special symbols. You can get them [at their website.](https://www.nerdfonts.com)
+
+If you need to know how to use one, you can find guides online for your
+operating system.
