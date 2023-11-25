@@ -14,7 +14,7 @@ import (
 var (
 	aimingstyle  tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorRed)
 	commentstyle tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorGray).Italic(true)
-	grassstyle   tcell.Style = tcell.StyleDefault.Background(tcell.ColorGreen).Foreground(tcell.ColorReset)
+	grassstyle   tcell.Style = tcell.StyleDefault.Background(tcell.ColorGreen).Foreground(tcell.ColorBlack)
 )
 
 // choose = choosing action, waitforkeypress = Wait for Key Press, idle = not player turn, move = moving action, moved = just moved a step (for checking barriers), attack = attack action, youcannotreach = show cannot reach msg, enemy# = attack enemy, moveattack = aim attack, movedattack = choose aim attack, noenemy = show no enemy msg, inventory = view inventory
@@ -22,15 +22,17 @@ var playerstate string = "choose"
 
 // Keegan's Stats
 var (
-	hp         int    = 10
-	maxhp      int    = 10
-	armor      int    = 0
-	armorname  string = "Military Clothes" // Display Armor Name
-	strength   int    = 10
-	weaponname string = "Pistol" // Weapon Name and Damage Checker
-	items             = []string{"Stick", "Pistol"}
-	firstname  string = "Keegan"
-	lastname   string = "Miller"
+	hp                 int         = 10
+	maxhp              int         = 10
+	armor              int         = 0
+	armorname          string      = "Military Clothes" // Display Armor Name
+	strength           int         = 10
+	weaponname         string      = "Pistol" // Weapon Name and Damage Checker
+	items                          = []string{"Stick", "Pistol"}
+	firstname          string      = "Keegan"
+	lastname           string      = "Miller"
+	keeganstyle        tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
+	defaultkeeganstyle tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
 )
 
 type maphandle struct {
@@ -90,6 +92,92 @@ func (m maphandle) CoordIsCollide(x int, y int) (collide bool) {
 	}
 
 	return
+}
+
+func (m maphandle) GroundType(x int, y int) (groundtype string) {
+	i := 0
+
+	for i < len(m.givenx) {
+		if m.givenx[i] == x {
+			if m.giveny[i] == y {
+				break
+			}
+		}
+		i++
+	}
+
+	if i != len(m.givenx) {
+		if m.givengrounds[i] == "grass" || m.givengrounds[i] == "g" {
+			groundtype = "grass"
+		} else {
+			groundtype = "none"
+		}
+	}
+
+	return
+}
+
+// probably goint to be unused, but could be helpful for other projects
+func (m *maphandle) RemoveObj(x int, y int) {
+	i := 0
+
+	for i < len(m.givenx) {
+		if m.givenx[i] == x {
+			if m.giveny[i] == y {
+				break
+			}
+		}
+
+		i++
+	}
+
+	bi := 0
+
+	for bi < len(m.blockx) {
+		if m.blockx[bi] == x {
+			if m.blocky[bi] == y {
+				break
+			}
+		}
+
+		bi++
+	}
+
+	if i != len(m.givenx) {
+		// givenx
+		newArr := make([]int, len(m.givenx)-1)
+		copy(newArr[:i], m.givenx[:i])
+		copy(newArr[i:], m.givenx[i+1:])
+
+		m.givenx = newArr
+
+		// giveny
+		newArr = make([]int, len(m.giveny)-1)
+		copy(newArr[:i], m.giveny[:i])
+		copy(newArr[i:], m.giveny[i+1:])
+
+		m.giveny = newArr
+
+		// givengrounds
+		newstrArr := make([]string, len(m.givengrounds)-1)
+		copy(newstrArr[:i], m.givengrounds[:i])
+		copy(newstrArr[i:], m.givengrounds[i+1:])
+	}
+
+	if bi != len(m.givenx) {
+		// blockx
+		newArr := make([]int, len(m.blockx)-1)
+		copy(newArr[:bi], m.blockx[:bi])
+		copy(newArr[bi:], m.blockx[bi+1:])
+
+		m.blockx = newArr
+
+		// blocky
+		newArr = make([]int, len(m.blocky)-1)
+		copy(newArr[:bi], m.blocky[:bi])
+		copy(newArr[bi:], m.blocky[bi+1:])
+		m.blocky = newArr
+	}
 }
 
 // Weapons on map
@@ -263,8 +351,8 @@ func startattackplayer(hitchance int) (damage int, hit bool, crit bool, roll int
 
 func testmap(s tcell.Screen) {
 	// Keegan
-	x := 3
 	y := 3
+	x := 3
 	bx := x
 	by := y
 
@@ -394,13 +482,15 @@ func testmap(s tcell.Screen) {
 			gamemap.AddObj("enemy", ex, ey)
 		}
 
+		gamemap.AddObj("g", 1, 3)
+
 		gamemap.Show(s)
 		// drawText(s, 0, 0, "------")
 		// drawText(s, 0, 1, "|    |")
 		// drawText(s, 0, 2, "|    |")
 		// drawText(s, 0, 3, "|    |")
 		// drawText(s, 0, 4, "------")
-		drawText(s, x, y, "K")
+		drawTextStyle(s, x, y, keeganstyle, "K")
 
 		if playerstate == "attack" {
 			drawTextStyle(s, ax, ay, aimingstyle, "+")
@@ -559,6 +649,14 @@ func testmap(s tcell.Screen) {
 				// 		steps -= 1
 				// 	}
 				// }
+
+				ground := gamemap.GroundType(x, y)
+
+				if ground == "grass" {
+					keeganstyle = grassstyle
+				} else {
+					keeganstyle = defaultkeeganstyle
+				}
 
 				if steps != 6 {
 					playerstate = "move"
