@@ -140,7 +140,7 @@ func (m maphandle) EnemyMove(ex int, ey int, x int, y int) (nex int, ney int) {
 		exb := ex
 		eyb := ey
 
-		if ex == x-1 || ex == x+1 {
+		if ex == x-1 || ex == x+1 || ex == x {
 			if ey == y+1 || ey == y-1 || ey == y {
 				break
 			}
@@ -470,7 +470,7 @@ func testmap(s tcell.Screen) {
 			enemyhit := false
 
 			if ehp > 0 {
-				if ex == x-1 || ex == x+1 {
+				if ex == x-1 || ex == x+1 || ex == x {
 					if ey == y+1 || ey == y-1 || ey == y {
 						enemyhit = true
 					} else {
@@ -766,7 +766,7 @@ func testmap(s tcell.Screen) {
 				ex, ey = nex, ney
 				enemymoving = false
 
-				if ex == x-1 || ex == x+1 {
+				if ex == x-1 || ex == x+1 || ex == x {
 					if ey == y+1 || ey == y-1 || ey == y {
 						playerstate = "idle"
 					}
