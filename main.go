@@ -140,6 +140,12 @@ func (m maphandle) EnemyMove(ex int, ey int, x int, y int) (nex int, ney int) {
 		exb := ex
 		eyb := ey
 
+		if ex == x-1 || ex == x+1 {
+			if ey == y+1 || ey == y-1 || ey == y {
+				break
+			}
+		}
+
 		if leftright == 0 {
 			ex--
 			steps++
@@ -153,14 +159,19 @@ func (m maphandle) EnemyMove(ex int, ey int, x int, y int) (nex int, ney int) {
 		}
 
 		if updown == 0 {
-			ey++
+			ey--
 			steps++
 		} else if updown == 1 {
-			ey--
+			ey++
 			steps++
 		}
 
 		if m.CoordIsCollide(ex, ey) {
+			ey = eyb
+		}
+
+		if ex == x && ey == y {
+			ex = exb
 			ey = eyb
 		}
 	}
@@ -429,7 +440,7 @@ func testmap(s tcell.Screen) {
 	hudtxt := ""
 	playerstate = "choose"
 	beingattacked := false
-	// enemymoving := false
+	enemymoving := false
 
 	// r := rand.New(rand.NewSource(time.Now().UnixMicro()))
 
@@ -438,22 +449,47 @@ func testmap(s tcell.Screen) {
 		// r = rand.New(rand.NewSource(time.Now().UnixMicro()))
 		gamemap := maphandle{}
 
+		// objects created before state checks, and player controls (or else enemy moves through walls)
+		for i := 0; i <= 5; i++ {
+			gamemap.AddObj("horiwall", i, 0)
+			gamemap.AddObj("horiwall", i, 10)
+		}
+		for i := 1; i <= 9; i++ {
+			gamemap.AddObj("vertwall", 0, i)
+			gamemap.AddObj("vertwall", 5, i)
+		}
+
+		if ehp > 0 {
+			gamemap.AddObj("enemy", ex, ey)
+		}
+
+		gamemap.AddObj("g", 1, 3)
+
 		if playerstate == "idle" {
 			steps = 0
 			enemyhit := false
 
-			// if x == 1 || x == 2 {
-			// 	if y == 1 || y == 2 {
-			// 		if ehp > 0 {
-			// 			enemyhit = true
-			// 		}
-			// 	}
-			// }
+			if ehp > 0 {
+				if ex == x-1 || ex == x+1 {
+					if ey == y+1 || ey == y-1 || ey == y {
+						enemyhit = true
+					} else {
+						enemymoving = true
+					}
+				} else {
+					enemymoving = true
+				}
+			}
+
+			if enemymoving {
+				nex, ney = gamemap.EnemyMove(ex, ey, x, y)
+				hudtxt = "The enemy cutout is sliding towards you."
+			}
 
 			if enemyhit {
 				hudtxt = "The enemy cutout falls over, and cuts you. You lost 1 HP (but you have infinity health)."
 			} else {
-				if ehp > 0 {
+				if ehp > 0 && !enemymoving {
 					hudtxt = "The enemy cutout cannot do anything to you."
 				}
 			}
@@ -528,21 +564,6 @@ func testmap(s tcell.Screen) {
 		}
 
 		s.Clear()
-		for i := 0; i <= 5; i++ {
-			gamemap.AddObj("horiwall", i, 0)
-			gamemap.AddObj("horiwall", i, 10)
-		}
-		for i := 1; i <= 9; i++ {
-			gamemap.AddObj("vertwall", 0, i)
-			gamemap.AddObj("vertwall", 5, i)
-		}
-
-		if ehp > 0 {
-			gamemap.AddObj("enemy", ex, ey)
-		}
-
-		gamemap.AddObj("g", 1, 3)
-
 		gamemap.Show(s)
 		// drawText(s, 0, 0, "------")
 		// drawText(s, 0, 1, "|    |")
@@ -554,6 +575,12 @@ func testmap(s tcell.Screen) {
 		if playerstate == "attack" {
 			drawTextStyle(s, ax, ay, aimingstyle, "+")
 		}
+
+		if enemymoving {
+			drawTextStyle(s, nex, ney, aimingstyle, "󰖃")
+		}
+
+		drawText(s, 0, 16, "ex: "+strconv.Itoa(ex)+", ey: "+strconv.Itoa(ey))
 
 		// Draw HUD
 		drawText(s, 0, 12, hudtxt)
@@ -733,6 +760,17 @@ func testmap(s tcell.Screen) {
 				beingattacked = false
 			} else {
 				playerstate = "idle"
+			}
+
+			if enemymoving {
+				ex, ey = nex, ney
+				enemymoving = false
+
+				if ex == x-1 || ex == x+1 {
+					if ey == y+1 || ey == y-1 || ey == y {
+						playerstate = "idle"
+					}
+				}
 			}
 		}
 	}
