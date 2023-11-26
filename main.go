@@ -633,6 +633,9 @@ func testmap(s tcell.Screen) {
 							ky = y
 							playerstate = "move"
 						} else if playerstate == "move" {
+							kx = x
+							ky = y
+							steps = 0
 							playerstate = "choose"
 						}
 					} else if ev.Rune() == 'a' {
