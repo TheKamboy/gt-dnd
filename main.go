@@ -17,7 +17,7 @@ var (
 	grassstyle   tcell.Style = tcell.StyleDefault.Background(tcell.ColorGreen).Foreground(tcell.ColorBlack)
 )
 
-// choose = choosing action, waitforkeypress = Wait for Key Press, idle = not player turn, move = moving action, moved = just moved a step (for checking barriers), attack = attack action, youcannotreach = show cannot reach msg, enemy# = attack enemy, moveattack = aim attack, movedattack = choose aim attack, noenemy = show no enemy msg, inventory = view inventory
+// choose = choosing action, waitforkeypress = Wait for Key Press, idle = not player turn, move = moving action, moved = just moved a step (for checking barriers), wantmove = y/n for move, attack = attack action, youcannotreach = show cannot reach msg, enemy# = attack enemy, moveattack = aim attack, movedattack = choose aim attack, noenemy = show no enemy msg, inventory = view inventory
 var playerstate string = "choose"
 
 // Keegan's Stats
@@ -425,6 +425,11 @@ func testmap(s tcell.Screen) {
 	ax := x
 	ay := y
 
+	// Keegan Move
+	kx := x
+	ky := y
+	movestyle := keeganstyle
+
 	// Enemy
 	ex := 1
 	ey := 1
@@ -536,6 +541,11 @@ func testmap(s tcell.Screen) {
 			playerstate = "waitforkeypress"
 		}
 
+		if playerstate != "move" && playerstate != "wantmove" {
+			x = kx
+			y = ky
+		}
+
 		if playerstate == "choose" {
 			controltxt = "[m]ove [a]ttack/action [s]tats [i]nventory [e]nd turn"
 			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Weapon: " + weaponname + ", Status: Choosing Action"
@@ -545,6 +555,9 @@ func testmap(s tcell.Screen) {
 		} else if playerstate == "attack" {
 			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Weapon: " + weaponname + ", Status: Attacking"
 			controltxt = "Attack Here? (y/n)"
+		} else if playerstate == "wantmove" {
+			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Status: Moving"
+			controltxt = "Move Here? (y/n)"
 		}
 
 		if playerstate == "choose" && steps == 6 {
@@ -574,6 +587,10 @@ func testmap(s tcell.Screen) {
 
 		if playerstate == "attack" {
 			drawTextStyle(s, ax, ay, aimingstyle, "+")
+		}
+
+		if playerstate == "move" || playerstate == "wantmove" {
+			drawTextStyle(s, kx, ky, movestyle, "󰖃")
 		}
 
 		if enemymoving {
@@ -612,6 +629,8 @@ func testmap(s tcell.Screen) {
 					if ev.Rune() == 'm' {
 						if playerstate != "move" && steps != 6 {
 							// moving
+							kx = x
+							ky = y
 							playerstate = "move"
 						} else if playerstate == "move" {
 							playerstate = "choose"
@@ -621,7 +640,7 @@ func testmap(s tcell.Screen) {
 						if playerstate == "move" {
 							bx = x
 							by = y
-							x -= 1
+							kx -= 1
 							steps += 1
 							playerstate = "moved"
 						} else if playerstate != "attack" {
@@ -638,7 +657,7 @@ func testmap(s tcell.Screen) {
 						if playerstate == "move" {
 							bx = x
 							by = y
-							y += 1
+							ky += 1
 							steps += 1
 							playerstate = "moved"
 						} else {
@@ -649,7 +668,7 @@ func testmap(s tcell.Screen) {
 						if playerstate == "move" {
 							bx = x
 							by = y
-							x += 1
+							kx += 1
 							steps += 1
 							playerstate = "moved"
 						}
@@ -658,13 +677,18 @@ func testmap(s tcell.Screen) {
 						if playerstate == "move" {
 							bx = x
 							by = y
-							y -= 1
+							ky -= 1
 							steps += 1
 							playerstate = "moved"
 						}
 					} else if ev.Rune() == 'n' {
 						if playerstate == "attack" {
 							playerstate = "choose"
+						} else if playerstate == "wantmove" {
+							kx = x
+							ky = y
+							playerstate = "choose"
+							steps = 0
 						}
 					} else if ev.Rune() == 'y' {
 						if playerstate == "attack" {
@@ -692,6 +716,8 @@ func testmap(s tcell.Screen) {
 							if cantreach {
 								playerstate = "youcannotreach"
 							}
+						} else if playerstate == "wantmove" {
+							playerstate = "choose"
 						}
 					} else if ev.Rune() == 'e' {
 						playerstate = "idle"
@@ -706,9 +732,9 @@ func testmap(s tcell.Screen) {
 			if playerstate == "moved" {
 				// Barriers Checks here
 
-				if gamemap.CoordIsCollide(x, y) {
-					x = bx
-					y = by
+				if gamemap.CoordIsCollide(kx, ky) {
+					kx = bx
+					ky = by
 					steps--
 				}
 
@@ -736,18 +762,18 @@ func testmap(s tcell.Screen) {
 				// 	}
 				// }
 
-				ground := gamemap.GroundType(x, y)
+				ground := gamemap.GroundType(kx, ky)
 
 				if ground == "grass" {
-					keeganstyle = grassstyle
+					movestyle = grassstyle
 				} else {
-					keeganstyle = defaultkeeganstyle
+					movestyle = defaultkeeganstyle
 				}
 
 				if steps != 6 {
 					playerstate = "move"
 				} else {
-					playerstate = "choose"
+					playerstate = "wantmove"
 				}
 			}
 
