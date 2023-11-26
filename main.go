@@ -646,7 +646,7 @@ func testmap(s tcell.Screen) {
 							kx -= 1
 							steps += 1
 							playerstate = "moved"
-						} else if playerstate != "attack" {
+						} else if playerstate != "attack" && playerstate != "wantmove" {
 							ax = ex
 							ay = ey
 							if ehp > 0 {
@@ -663,7 +663,7 @@ func testmap(s tcell.Screen) {
 							ky += 1
 							steps += 1
 							playerstate = "moved"
-						} else {
+						} else if playerstate != "attack" && playerstate != "wantmove" {
 							yourstats(s)
 						}
 					} else if ev.Rune() == 'd' {
