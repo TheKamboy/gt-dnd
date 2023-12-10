@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"math"
 	"math/rand"
 	"os"
 	"strconv"
@@ -45,6 +46,40 @@ type maphandle struct {
 	giveny       []int
 	blockx       []int
 	blocky       []int
+}
+
+// get distance between two points
+func getDistance(x int, y int, x2 int, y2 int) (distance float64) {
+	newx, newy := float64(x), float64(y)
+	newx2, newy2 := float64(x2), float64(y2)
+
+	return math.Sqrt(math.Pow(newx2-newx, 2) + math.Pow(newy2-newy, 2))
+}
+
+// cool function to see if your weapon can hit the enemy lol
+// depending on the weapon, it might make it not be able to hit, or set it to disadvantage
+// if good = false, and atdis = true, then the weapon will hit, but be at disadvantage
+func WeaponDistanceGood(distance float64, weapon string) (good bool, atdis bool) {
+	atdis = false
+
+	if weapon == "Stick" {
+		if distance <= 1.0 {
+			good = true
+		} else {
+			good = false
+		}
+	} else if weapon == "Pistol" {
+		if distance <= 5.0 {
+			good = true
+		} else if distance <= 8.0 {
+			good = false
+			atdis = true
+		} else {
+			good = false
+		}
+	}
+
+	return
 }
 
 // Adds Ground Type to Map
@@ -314,7 +349,7 @@ func yourstats(s tcell.Screen) {
 		s.Clear()
 		drawText(s, 0, 0, "Name: "+firstname+" "+lastname)
 		drawText(s, 0, 2, "Health: "+strconv.Itoa(hp)+"/"+strconv.Itoa(maxhp))
-		drawText(s, 0, 3, "Weapon (Damage): "+weaponname+" ("+dice+"💥 "+strconv.Itoa(strength)+")")
+		drawText(s, 0, 3, "Weapon (Damage, Distance): "+weaponname+" ("+dice+"💥 "+strconv.Itoa(strength)+", ")
 		drawText(s, 0, 4, "Armor (Defense): "+armorname+" ( "+strconv.Itoa(armor)+")")
 		drawText(s, 0, 6, "Press ? for help, or any other key to go back...")
 	}
@@ -453,6 +488,7 @@ func testmap(s tcell.Screen) {
 
 	// ehp := 10
 	steps := 0
+	bsteps := 0
 	controltxt := ""
 	hudtxt := ""
 	playerstate = "choose"
@@ -504,7 +540,8 @@ func testmap(s tcell.Screen) {
 			}
 
 			if enemyhit {
-				hudtxt = "The enemy cutout falls over, and cuts you. You lost 1 HP (but you have infinity health)."
+				hudtxt = "The enemy cutout falls over, and cuts you. You lost 1 HP."
+				hp--
 			} else {
 				if ehp > 0 && !enemymoving {
 					hudtxt = "The enemy cutout cannot do anything to you."
@@ -559,7 +596,7 @@ func testmap(s tcell.Screen) {
 		}
 
 		if playerstate == "choose" {
-			controltxt = "[m]ove [a]ttack a[c]tion [s]tats [i]nventory [e]nd turn"
+			controltxt = "[m]ove [a]ttack [w]orld [s]tats [i]nventory [e]nd turn"
 			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Weapon: " + weaponname + ", Status: Choosing Action"
 		} else if playerstate == "move" {
 			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Status: Moving"
@@ -573,7 +610,7 @@ func testmap(s tcell.Screen) {
 		}
 
 		if playerstate == "choose" && steps == 6 {
-			controltxt = "[a]ttack a[c]tion [s]tats [i]nventory [e]nd turn"
+			controltxt = "[a]ttack [w]orld [s]tats [i]nventory [e]nd turn"
 		}
 
 		if playerstate == "youcannotreach" {
@@ -609,7 +646,7 @@ func testmap(s tcell.Screen) {
 			drawTextStyle(s, nex, ney, aimingstyle, "󰖃")
 		}
 
-		drawText(s, 0, 16, "ex: "+strconv.Itoa(ex)+", ey: "+strconv.Itoa(ey))
+		drawText(s, 0, 16, "Distance: "+strconv.FormatFloat(getDistance(x, y, ex, ey), 'f', -1, 64))
 
 		// Draw HUD
 		drawText(s, 0, 12, hudtxt)
@@ -647,7 +684,7 @@ func testmap(s tcell.Screen) {
 						} else if playerstate == "move" {
 							kx = x
 							ky = y
-							steps = 0
+							steps = bsteps
 							playerstate = "choose"
 						}
 					} else if ev.Rune() == 'a' {
@@ -707,36 +744,46 @@ func testmap(s tcell.Screen) {
 							kx = x
 							ky = y
 							playerstate = "choose"
-							steps = 0
+							steps = bsteps
 						}
 					} else if ev.Rune() == 'y' {
 						if playerstate == "attack" {
-							cantreach := false
-							if ex == 1 && ey == 1 {
-								if x == 1 || x == 2 {
-									if y == 1 || y == 2 {
-										playerstate = "enemy1"
-									} else {
-										if weaponname != "Pistol" {
-											cantreach = true
-										} else {
-											playerstate = "enemy1"
-										}
-									}
-								} else {
-									if weaponname != "Pistol" {
-										cantreach = true
-									} else {
-										playerstate = "enemy1"
-									}
-								}
+							good, atdis := false, false
+							if ax == ex && ay == ey {
+								good, atdis = WeaponDistanceGood(getDistance(x, y, ex, ey), weaponname)
 							}
+							println(good, atdis)
+							// cantreach := false
+							// if ex == 1 && ey == 1 {
+							// 	if x == 1 || x == 2 {
+							// 		if y == 1 || y == 2 {
+							// 			playerstate = "enemy1"
+							// 		} else {
+							// 			if weaponname != "Pistol" {
+							// 				cantreach = true
+							// 			} else {
+							// 				playerstate = "enemy1"
+							// 			}
+							// 		}
+							// 	} else {
+							// 		if weaponname != "Pistol" {
+							// 			cantreach = true
+							// 		} else {
+							// 			playerstate = "enemy1"
+							// 		}
+							// 	}
+							// }
 
-							if cantreach {
+							if good {
+								playerstate = "enemy1"
+							} else if !good && atdis {
+								playerstate = "youcannotreach"
+							} else if !good && !atdis {
 								playerstate = "youcannotreach"
 							}
-						} else if playerstate == "wantmove" {
+						} else if playerstate == "wantmove" || playerstate == "move" {
 							playerstate = "choose"
+							bsteps = steps
 						}
 					} else if ev.Rune() == 'e' {
 						playerstate = "idle"
