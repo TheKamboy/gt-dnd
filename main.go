@@ -418,6 +418,7 @@ func startattackplayer(hitchance int) (damage int, hit bool, crit bool, roll int
 	return
 }
 
+// pimp named slickback
 func debugmenu(s tcell.Screen) {
 	s.Clear()
 	drawText(s, 0, 0, "DEBUG MENU")
@@ -558,7 +559,7 @@ func testmap(s tcell.Screen) {
 		}
 
 		if playerstate == "choose" {
-			controltxt = "[m]ove [a]ttack/action [s]tats [i]nventory [e]nd turn"
+			controltxt = "[m]ove [a]ttack a[c]tion [s]tats [i]nventory [e]nd turn"
 			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Weapon: " + weaponname + ", Status: Choosing Action"
 		} else if playerstate == "move" {
 			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Status: Moving"
@@ -572,7 +573,7 @@ func testmap(s tcell.Screen) {
 		}
 
 		if playerstate == "choose" && steps == 6 {
-			controltxt = "[a]ttack/action [s]tats [i]nventory [e]nd turn"
+			controltxt = "[a]ttack a[c]tion [s]tats [i]nventory [e]nd turn"
 		}
 
 		if playerstate == "youcannotreach" {
