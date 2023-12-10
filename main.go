@@ -10,11 +10,15 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
+// Debug Menu Enabler (for the cheaters)
+var debug bool = true
+
 // Styles
 var (
-	aimingstyle  tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorRed)
-	commentstyle tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorGray).Italic(true)
-	grassstyle   tcell.Style = tcell.StyleDefault.Background(tcell.ColorGreen).Foreground(tcell.ColorBlack)
+	aimingstyle   tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorRed)
+	commentstyle  tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorGray).Italic(true)
+	grassstyle    tcell.Style = tcell.StyleDefault.Background(tcell.ColorGreen).Foreground(tcell.ColorBlack)
+	lightbluetext tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorLightBlue)
 )
 
 // choose = choosing action, waitforkeypress = Wait for Key Press, idle = not player turn, move = moving action, moved = just moved a step (for checking barriers), wantmove = y/n for move, attack = attack action, youcannotreach = show cannot reach msg, enemy# = attack enemy, moveattack = aim attack, movedattack = choose aim attack, noenemy = show no enemy msg, inventory = view inventory
@@ -414,6 +418,13 @@ func startattackplayer(hitchance int) (damage int, hit bool, crit bool, roll int
 	return
 }
 
+func debugmenu(s tcell.Screen) {
+	s.Clear()
+	drawText(s, 0, 0, "DEBUG MENU")
+	drawTextStyle(s, 0, 2, lightbluetext, "[1] +Keegan")
+	drawText(s, 0, 3, "[2] YES")
+}
+
 func testmap(s tcell.Screen) {
 	// Keegan
 	y := 3
@@ -674,6 +685,10 @@ func testmap(s tcell.Screen) {
 							kx += 1
 							steps += 1
 							playerstate = "moved"
+						} else if playerstate == "choose" {
+							if debug {
+								debugmenu(s)
+							}
 						}
 					} else if ev.Rune() == 'w' {
 						// for moving
