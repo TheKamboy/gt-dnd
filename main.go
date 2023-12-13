@@ -315,7 +315,7 @@ func stats_help(s tcell.Screen) {
 	drawText(s, 0, 0, "Stats:")
 	drawText(s, 0, 2, "Stats show many things that have to do with your character.")
 	drawText(s, 0, 4, "Example of a stat:")
-	drawText(s, 0, 6, "Weapon (Damage): Pistol (󰇏 💥10)")
+	drawText(s, 0, 6, "Weapon (Damage, Distance): Pistol (󰇏 💥 10, 󱡀 5-8)")
 	drawText(s, 0, 8, "Press any key to continue...")
 
 	s.Show()
@@ -326,10 +326,11 @@ func stats_help(s tcell.Screen) {
 	s.Clear()
 	drawText(s, 0, 0, "Symbols:")
 	drawText(s, 0, 2, "💥  : Damage Number Indicator")
-	drawText(s, 0, 3, "󰇏  : Weapon rolls dice (based on damage amount, ex. 10 damage would be a d10)")
-	drawText(s, 0, 4, "#󰇏 : Weapon rolls a # amount of dice (based on damage amount)")
-	drawText(s, 0, 5, "  : Armor Number Indicator")
-	drawText(s, 0, 7, "Press any key to quit help...")
+	drawText(s, 0, 3, "󱡀  : Weapon Distance (if distance has a -, then past the first number it is disadvantage, then miss)")
+	drawText(s, 0, 4, "󰇏  : Weapon rolls dice (based on damage amount, ex. 10 damage would be a d10)")
+	drawText(s, 0, 5, "#󰇏 : Weapon rolls a # amount of dice (based on damage amount)")
+	drawText(s, 0, 6, "  : Armor Number Indicator")
+	drawText(s, 0, 8, "Press any key to quit help...")
 
 	// Update screen
 	s.Show()
@@ -340,16 +341,20 @@ func stats_help(s tcell.Screen) {
 
 func yourstats(s tcell.Screen) {
 	dicesymbol := ""
+	distance := ""
 
 	if weaponname == "Pistol" {
 		dicesymbol = "󰇏 "
+		distance = "5-8"
+	} else if weaponname == "Stick" {
+		distance = "1"
 	}
 
 	statsdisplay := func(dice string) {
 		s.Clear()
 		drawText(s, 0, 0, "Name: "+firstname+" "+lastname)
 		drawText(s, 0, 2, "Health: "+strconv.Itoa(hp)+"/"+strconv.Itoa(maxhp))
-		drawText(s, 0, 3, "Weapon (Damage, Distance): "+weaponname+" ("+dice+"💥 "+strconv.Itoa(strength)+", ")
+		drawText(s, 0, 3, "Weapon (Damage, Distance): "+weaponname+" ("+dice+"💥 "+strconv.Itoa(strength)+", 󱡀 "+distance+")")
 		drawText(s, 0, 4, "Armor (Defense): "+armorname+" ( "+strconv.Itoa(armor)+")")
 		drawText(s, 0, 6, "Press ? for help, or any other key to go back...")
 	}
