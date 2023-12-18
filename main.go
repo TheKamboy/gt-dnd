@@ -648,6 +648,8 @@ func testmap(s tcell.Screen) {
 		if playerstate == "youcannotreach" {
 			hudtxt = "You cannot reach that far!"
 			controltxt = "Press any key to continue..."
+			playerstate = "waitforkeypress"
+			beingattacked = true
 		}
 
 		if playerstate == "noenemy" {
@@ -824,10 +826,6 @@ func testmap(s tcell.Screen) {
 				}
 			}
 
-			if playerstate == "youcannotreach" {
-				playerstate = "choose"
-			}
-
 			if playerstate == "moved" {
 				// Barriers Checks here
 
@@ -910,7 +908,7 @@ func main() {
 		log.Fatalf("%+v", err)
 	}
 
-	needwidth, needheight := 60, 30
+	needwidth, needheight := 60, 27
 
 	width, height := s.Size()
 
