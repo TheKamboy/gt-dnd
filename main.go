@@ -57,13 +57,15 @@ func getDistance(x int, y int, x2 int, y2 int) (distance float64) {
 }
 
 // cool function to see if your weapon can hit the enemy lol
+//
 // depending on the weapon, it might make it not be able to hit, or set it to disadvantage
+//
 // if good = false, and atdis = true, then the weapon will hit, but be at disadvantage
 func WeaponDistanceGood(distance float64, weapon string) (good bool, atdis bool) {
 	atdis = false
 
 	if weapon == "Stick" {
-		if distance <= 1.0 {
+		if distance <= 1.6 {
 			good = true
 		} else {
 			good = false
@@ -156,7 +158,14 @@ func (m maphandle) GroundType(x int, y int) (groundtype string) {
 	return
 }
 
-func (m maphandle) EnemyMove(ex int, ey int, x int, y int) (nex int, ney int) {
+// mode: chase, away, range
+//
+// chase = chase the player
+//
+// away = run away from the player
+//
+// range = get in range with player
+func (m maphandle) EnemyMove(ex int, ey int, x int, y int, erange int, mode string) (nex int, ney int) {
 	// 2 means unused
 	leftright := 2
 	updown := 2
@@ -175,43 +184,52 @@ func (m maphandle) EnemyMove(ex int, ey int, x int, y int) (nex int, ney int) {
 		updown = 0
 	}
 
-	for steps < 6 {
-		exb := ex
-		eyb := ey
+	if mode == "chase" {
+		for steps < 6 {
+			exb := ex
+			eyb := ey
 
-		if ex == x-1 || ex == x+1 || ex == x {
-			if ey == y+1 || ey == y-1 || ey == y {
-				break
+			if ex == x-1 || ex == x+1 || ex == x {
+				if ey == y+1 || ey == y-1 || ey == y {
+					break
+				}
 			}
-		}
 
-		if leftright == 0 {
-			ex--
-			steps++
-		} else if leftright == 1 {
-			ex++
-			steps++
-		}
+			if ex == x {
+				leftright = 2
+			}
+			if ey == y {
+				updown = 2
+			}
 
-		if m.CoordIsCollide(ex, ey) {
-			ex = exb
-		}
+			if leftright == 0 {
+				ex--
+				steps++
+			} else if leftright == 1 {
+				ex++
+				steps++
+			}
 
-		if updown == 0 {
-			ey--
-			steps++
-		} else if updown == 1 {
-			ey++
-			steps++
-		}
+			if m.CoordIsCollide(ex, ey) {
+				ex = exb
+			}
 
-		if m.CoordIsCollide(ex, ey) {
-			ey = eyb
-		}
+			if updown == 0 {
+				ey--
+				steps++
+			} else if updown == 1 {
+				ey++
+				steps++
+			}
 
-		if ex == x && ey == y {
-			ex = exb
-			ey = eyb
+			if m.CoordIsCollide(ex, ey) {
+				ey = eyb
+			}
+
+			if ex == x && ey == y {
+				ex = exb
+				ey = eyb
+			}
 		}
 	}
 
@@ -499,6 +517,7 @@ func testmap(s tcell.Screen) {
 	playerstate = "choose"
 	beingattacked := false
 	enemymoving := false
+	disadvantage := false
 
 	// r := rand.New(rand.NewSource(time.Now().UnixMicro()))
 
@@ -540,7 +559,7 @@ func testmap(s tcell.Screen) {
 			}
 
 			if enemymoving {
-				nex, ney = gamemap.EnemyMove(ex, ey, x, y)
+				nex, ney = gamemap.EnemyMove(ex, ey, x, y, 0, "chase")
 				hudtxt = "The enemy cutout is sliding towards you."
 			}
 
@@ -560,10 +579,18 @@ func testmap(s tcell.Screen) {
 			} else {
 				playerstate = "choose"
 			}
+
+			bsteps = 0
 		}
 
 		if playerstate == "enemy1" {
-			damage, hit, crit, _ := startattackplayer(10)
+			damage, hit, crit := 0, false, false
+
+			if disadvantage {
+				damage, hit, crit, _ = startattackplayer(10 + 5)
+			} else {
+				damage, hit, crit, _ = startattackplayer(10)
+			}
 
 			if hit {
 				if crit {
@@ -782,7 +809,8 @@ func testmap(s tcell.Screen) {
 							if good {
 								playerstate = "enemy1"
 							} else if !good && atdis {
-								playerstate = "youcannotreach"
+								playerstate = "enemy1"
+								disadvantage = true
 							} else if !good && !atdis {
 								playerstate = "youcannotreach"
 							}
@@ -880,6 +908,17 @@ func main() {
 	}
 	if err := s.Init(); err != nil {
 		log.Fatalf("%+v", err)
+	}
+
+	needwidth, needheight := 60, 30
+
+	width, height := s.Size()
+
+	term_small_err_msg := "ERROR: Your terminal is too small for this game.\nPlease change your terminal size and try again.\n\nYour Width: " + strconv.Itoa(width) + "\nYour Height: " + strconv.Itoa(height) + "\nNeeds Width: " + strconv.Itoa(needwidth) + "\nNeeds Height: " + strconv.Itoa(needheight)
+
+	if width < needwidth || height < needheight {
+		s.Fini()
+		log.Fatalf(term_small_err_msg)
 	}
 
 	// Set default text style
