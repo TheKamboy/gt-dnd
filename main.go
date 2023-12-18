@@ -20,6 +20,7 @@ var (
 	commentstyle  tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorGray).Italic(true)
 	grassstyle    tcell.Style = tcell.StyleDefault.Background(tcell.ColorGreen).Foreground(tcell.ColorBlack)
 	lightbluetext tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorLightBlue)
+	yellowtext    tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorYellow)
 )
 
 // choose = choosing action, waitforkeypress = Wait for Key Press, idle = not player turn, move = moving action, moved = just moved a step (for checking barriers), wantmove = y/n for move, attack = attack action, youcannotreach = show cannot reach msg, enemy# = attack enemy, moveattack = aim attack, movedattack = choose aim attack, noenemy = show no enemy msg, inventory = view inventory
@@ -46,6 +47,7 @@ type maphandle struct {
 	giveny       []int
 	blockx       []int
 	blocky       []int
+	chestitems   []string
 }
 
 // get distance between two points
@@ -90,7 +92,7 @@ func (m *maphandle) AddObj(objtype string, x int, y int) {
 	m.givenx = append(m.givenx, x)
 	m.giveny = append(m.giveny, y)
 
-	if objtype == "horiwall" || objtype == "vertwall" || objtype == "enemy" {
+	if objtype == "horiwall" || objtype == "vertwall" || objtype == "enemy" || objtype == "chest" {
 		m.blockx = append(m.blockx, x)
 		m.blocky = append(m.blocky, y)
 	}
@@ -112,9 +114,16 @@ func (m maphandle) Show(s tcell.Screen) {
 		} else if m.givengrounds[i] == "enemy" {
 			drawTextStyle(s, m.blockx[blocki], m.blocky[blocki], aimingstyle, "B")
 			blocki++
+		} else if m.givengrounds[i] == "chest" {
+			drawTextStyle(s, m.blockx[blocki], m.blocky[blocki], yellowtext, "󰜦")
+			blocki++
 		}
 		i++
 	}
+}
+
+func (m *maphandle) AddChestItem(item string) {
+	m.chestitems = append(m.chestitems, item)
 }
 
 func (m maphandle) CoordIsCollide(x int, y int) (collide bool) {
@@ -127,6 +136,50 @@ func (m maphandle) CoordIsCollide(x int, y int) (collide bool) {
 				collide = true
 				return
 			}
+		}
+
+		i++
+	}
+
+	return
+}
+
+func (m maphandle) FindObjectAtCoord(x int, y int, objtype string) (objatcoord bool, objx int, objy int) {
+	i := 0
+	objatcoord = false
+	objx = 0
+	objy = 0
+
+	for i < len(m.givengrounds) {
+		if m.givengrounds[i] == objtype {
+			if m.givenx[i] == x && m.giveny[i] == y {
+				objatcoord = true
+				objx = m.givenx[i]
+				objy = m.giveny[i]
+				return
+			}
+		}
+
+		i++
+	}
+
+	return
+}
+
+func (m maphandle) GetObjectAtCoord(x int, y int) (objatcoord bool, objtype string, objx int, objy int) {
+	i := 0
+	objatcoord = false
+	objtype = ""
+	objx = 0
+	objy = 0
+
+	for i < len(m.givengrounds) {
+		if m.givenx[i] == x && m.giveny[i] == y {
+			objatcoord = true
+			objx = m.givenx[i]
+			objy = m.giveny[i]
+			objtype = m.givengrounds[i]
+			return
 		}
 
 		i++
@@ -239,7 +292,7 @@ func (m maphandle) EnemyMove(ex int, ey int, x int, y int, erange int, mode stri
 	return
 }
 
-// probably goint to be unused, but could be helpful for other projects
+// probably going to be unused, but could be helpful for other projects
 func (m *maphandle) RemoveObj(x int, y int) {
 	i := 0
 
