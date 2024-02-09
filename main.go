@@ -887,6 +887,14 @@ func testmap(s tcell.Screen) {
 								playerstate = "youcannotreach"
 							}
 						} else if playerstate == "wantmove" || playerstate == "move" {
+							ground := gamemap.GroundType(kx, ky)
+
+							if ground == "grass" {
+								keeganstyle = grassstyle
+							} else {
+								keeganstyle = defaultkeeganstyle
+							}
+
 							playerstate = "choose"
 							bsteps = steps
 						}
