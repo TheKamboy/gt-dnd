@@ -705,7 +705,13 @@ func testmap(s tcell.Screen) {
 			controltxt = "Move Here? (y/n)"
 		}
 
-		if playerstate == "choose" && steps == 6 {
+		if playerstate == "choose" && !canattack {
+			controltxt = "[m]ove [w]orld [s]tats [i]nventory [e]nd turn"
+		}
+
+		if playerstate == "choose" && steps == 6 && !canattack {
+			controltxt = "[w]orld [s]tats [i]nventory [e]nd turn"
+		} else if playerstate == "choose" && steps == 6 {
 			controltxt = "[a]ttack [w]orld [s]tats [i]nventory [e]nd turn"
 		}
 
