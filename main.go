@@ -47,7 +47,20 @@ type maphandle struct {
 	giveny       []int
 	blockx       []int
 	blocky       []int
+	pathx        []int
+	pathy        []int
+	pathdir      []string
 	chestitems   []string
+}
+
+// https://stackoverflow.com/questions/15323767/does-go-have-if-x-in-construct-similar-to-python
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
 
 // get distance between two points
@@ -86,15 +99,25 @@ func WeaponDistanceGood(distance float64, weapon string) (good bool, atdis bool)
 	return
 }
 
-// Adds Ground Type to Map
+// AddObj Ground Type to Map
 func (m *maphandle) AddObj(objtype string, x int, y int) {
-	m.givengrounds = append(m.givengrounds, objtype)
-	m.givenx = append(m.givenx, x)
-	m.giveny = append(m.giveny, y)
+	checkforPath := []string{"pathup", "pathdown", "pathleft", "pathright"}
+
+	if !stringInSlice(objtype, checkforPath) {
+		m.givengrounds = append(m.givengrounds, objtype)
+		m.givenx = append(m.givenx, x)
+		m.giveny = append(m.giveny, y)
+	}
 
 	if objtype == "horiwall" || objtype == "vertwall" || objtype == "enemy" || objtype == "chest" {
 		m.blockx = append(m.blockx, x)
 		m.blocky = append(m.blocky, y)
+	}
+
+	if stringInSlice(objtype, checkforPath) {
+		m.pathx = append(m.pathx, x)
+		m.pathy = append(m.pathy, y)
+		m.pathdir = append(m.pathdir, objtype)
 	}
 }
 
@@ -211,6 +234,22 @@ func (m maphandle) GroundType(x int, y int) (groundtype string) {
 	return
 }
 
+func (m maphandle) getPathDirAtPoint(x int, y int) (dir string) {
+	i := 0
+	dir = "none"
+
+	for i < len(m.pathx) {
+		if x == m.pathx[i] {
+			if y == m.pathy[i] {
+				dir = m.pathdir[i]
+				return
+			}
+		}
+	}
+
+	return
+}
+
 // mode: chase, away, range
 //
 // chase = chase the player
@@ -252,6 +291,80 @@ func (m maphandle) EnemyMove(ex int, ey int, x int, y int, erange int, mode stri
 				leftright = 2
 			}
 			if ey == y {
+				updown = 2
+			}
+
+			if leftright == 0 {
+				ex--
+				steps++
+			} else if leftright == 1 {
+				ex++
+				steps++
+			}
+
+			if m.CoordIsCollide(ex, ey) {
+				ex = exb
+			}
+
+			if updown == 0 {
+				ey--
+				steps++
+			} else if updown == 1 {
+				ey++
+				steps++
+			}
+
+			if m.CoordIsCollide(ex, ey) {
+				ey = eyb
+			}
+
+			if ex == x && ey == y {
+				ex = exb
+				ey = eyb
+			}
+		}
+	} else if mode == "away" {
+		invertupdown := false
+		invertleftright := false
+
+		if ey > y {
+			invertupdown = true
+			invertleftright = true
+		}
+
+		for steps < 6 {
+			exb := ex
+			eyb := ey
+
+			dir := m.getPathDirAtPoint(ex, ey)
+
+			if dir == "pathup" {
+				if !invertupdown {
+					updown = 0
+				} else {
+					updown = 1
+				}
+				leftright = 2
+			} else if dir == "pathdown" {
+				if !invertupdown {
+					updown = 1
+				} else {
+					updown = 0
+				}
+				leftright = 2
+			} else if dir == "pathleft" {
+				if !invertleftright {
+					leftright = 0
+				} else {
+					leftright = 1
+				}
+				updown = 2
+			} else if dir == "pathright" {
+				if !invertleftright {
+					leftright = 1
+				} else {
+					leftright = 0
+				}
 				updown = 2
 			}
 
