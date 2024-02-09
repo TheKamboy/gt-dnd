@@ -642,6 +642,7 @@ func testmap(s tcell.Screen) {
 			}
 
 			bsteps = 0
+			canattack = true
 		}
 
 		if playerstate == "enemy1" {
@@ -680,6 +681,8 @@ func testmap(s tcell.Screen) {
 
 			controltxt = "Press any key to continue..."
 
+			beingattacked = true
+			canattack = false
 			playerstate = "waitforkeypress"
 		}
 
