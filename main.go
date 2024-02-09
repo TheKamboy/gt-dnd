@@ -543,6 +543,7 @@ func testmap(s tcell.Screen) {
 	x := 3
 	bx := x
 	by := y
+	canattack := true
 
 	// Keegan Aim
 	ax := x
@@ -594,6 +595,13 @@ func testmap(s tcell.Screen) {
 		}
 
 		gamemap.AddObj("g", 1, 3)
+
+		if playerstate == "attack" && !canattack {
+			hudtxt = "You already used your attack!"
+			controltxt = "Press any key to continue..."
+			playerstate = "waitforkeypress"
+			beingattacked = true
+		}
 
 		if playerstate == "idle" {
 			steps = 0
