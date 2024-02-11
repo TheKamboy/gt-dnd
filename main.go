@@ -12,7 +12,7 @@ import (
 )
 
 // Debug Menu Enabler (for the cheaters)
-var debug bool = true
+var DEBUG bool = true
 
 // Styles
 var (
@@ -941,7 +941,7 @@ func testmap(s tcell.Screen) {
 							steps += 1
 							playerstate = "moved"
 						} else if playerstate == "choose" {
-							if debug {
+							if DEBUG {
 								debugmenu(s)
 							}
 						}
