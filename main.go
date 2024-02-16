@@ -762,7 +762,7 @@ func testmap(s tcell.Screen) {
 			damage, hit, crit := 0, false, false
 
 			if disadvantage {
-				damage, hit, crit, _ = startattackplayer(10 + 5)
+				damage, hit, crit, _ = startattackplayer(10 + 4)
 			} else {
 				damage, hit, crit, _ = startattackplayer(10)
 			}
