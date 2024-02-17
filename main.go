@@ -805,7 +805,7 @@ func testmap(s tcell.Screen) {
 		}
 
 		if playerstate == "choose" {
-			controltxt = "[m]ove [a]ttack [w]orld [s]tats [i]nventory [e]nd turn"
+			// controltxt = "[m]ove [a]ttack [w]orld [s]tats [i]nventory [e]nd turn"
 			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Weapon: " + weaponname + ", Status: Choosing Action"
 		} else if playerstate == "move" {
 			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Status: Moving"
@@ -818,14 +818,28 @@ func testmap(s tcell.Screen) {
 			controltxt = "Move Here? (y/n)"
 		}
 
-		if playerstate == "choose" && !canattack {
-			controltxt = "[m]ove [w]orld [s]tats [i]nventory [e]nd turn"
-		}
+		// if playerstate == "choose" && !canattack {
+		// 	controltxt = "[m]ove [w]orld [s]tats [i]nventory [e]nd turn"
+		// }
 
-		if playerstate == "choose" && steps == 6 && !canattack {
-			controltxt = "[w]orld [s]tats [i]nventory [e]nd turn"
-		} else if playerstate == "choose" && steps == 6 {
-			controltxt = "[a]ttack [w]orld [s]tats [i]nventory [e]nd turn"
+		// if playerstate == "choose" && steps == 6 && !canattack {
+		// 	controltxt = "[w]orld [s]tats [i]nventory [e]nd turn"
+		// } else if playerstate == "choose" && steps == 6 {
+		// 	controltxt = "[a]ttack [w]orld [s]tats [i]nventory [e]nd turn"
+		// }
+
+		if playerstate == "choose" {
+			controltxt = ""
+
+			if steps != 6 {
+				controltxt += "[m]ove "
+			}
+
+			if canattack {
+				controltxt += "[a]ttack "
+			}
+
+			controltxt += "[w]orld [s]tats [i]nventory [e]nd"
 		}
 
 		if playerstate == "youcannotreach" {
