@@ -921,8 +921,8 @@ func testmap(s tcell.Screen) {
 					} else if ev.Rune() == 'a' {
 						// attack or move in moving state
 						if playerstate == "move" {
-							bx = x
-							by = y
+							bx = kx
+							by = ky
 							kx -= 1
 							steps += 1
 							playerstate = "moved"
@@ -938,8 +938,8 @@ func testmap(s tcell.Screen) {
 					} else if ev.Rune() == 's' {
 						// check stats or move in moving state
 						if playerstate == "move" {
-							bx = x
-							by = y
+							bx = kx
+							by = ky
 							ky += 1
 							steps += 1
 							playerstate = "moved"
@@ -949,8 +949,8 @@ func testmap(s tcell.Screen) {
 					} else if ev.Rune() == 'd' {
 						// for moving
 						if playerstate == "move" {
-							bx = x
-							by = y
+							bx = kx
+							by = ky
 							kx += 1
 							steps += 1
 							playerstate = "moved"
@@ -962,8 +962,8 @@ func testmap(s tcell.Screen) {
 					} else if ev.Rune() == 'w' {
 						// for moving
 						if playerstate == "move" {
-							bx = x
-							by = y
+							bx = kx
+							by = ky
 							ky -= 1
 							steps += 1
 							playerstate = "moved"
