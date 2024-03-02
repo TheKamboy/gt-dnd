@@ -843,6 +843,8 @@ func testmap(s tcell.Screen) {
 	ey := 1
 	ehp := 10
 
+	inCombat := true
+
 	// Enemy Move
 	nex := ex
 	ney := ey
@@ -876,6 +878,8 @@ func testmap(s tcell.Screen) {
 
 		if ehp > 0 {
 			gamemap.AddObj("enemy", ex, ey)
+		} else {
+			inCombat = false
 		}
 
 		gamemap.AddObj("g", 1, 3)
@@ -981,7 +985,12 @@ func testmap(s tcell.Screen) {
 			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Weapon: " + weaponname + ", Status: Choosing Action"
 		} else if playerstate == "move" {
 			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Status: Moving"
-			controltxt = "Steps: " + strconv.Itoa(steps) + "/6"
+
+			if inCombat {
+				controltxt = "Steps: " + strconv.Itoa(steps) + "/6"
+			} else {
+				controltxt = "Steps: " + strconv.Itoa(steps) + "/󰛤"
+			}
 		} else if playerstate == "attack" {
 			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Weapon: " + weaponname + ", Status: Attacking"
 			controltxt = "Attack Here? (y/n)"
@@ -1006,7 +1015,7 @@ func testmap(s tcell.Screen) {
 		if playerstate == "choose" {
 			controltxt = ""
 
-			if steps != 6 {
+			if steps != 6 || !inCombat {
 				controltxt += "[m]ove "
 			}
 
@@ -1086,7 +1095,10 @@ func testmap(s tcell.Screen) {
 
 				if playerstate != "waitforkeypress" {
 					if ev.Rune() == 'm' {
-						if playerstate == "choose" && steps != 6 {
+						if playerstate == "choose" {
+							if steps >= 6 && inCombat {
+								break
+							}
 							// moving
 							kx = x
 							ky = y
@@ -1260,10 +1272,10 @@ func testmap(s tcell.Screen) {
 					movestyle = defaultkeeganstyle
 				}
 
-				if steps != 6 {
-					playerstate = "move"
-				} else {
+				if steps >= 6 && inCombat {
 					playerstate = "wantmove"
+				} else {
+					playerstate = "move"
 				}
 			}
 
