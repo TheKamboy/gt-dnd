@@ -733,8 +733,9 @@ func testmap(s tcell.Screen) {
 			}
 
 			if enemymoving {
-				nex, ney = gamemap.EnemyMove(ex, ey, x, y, 0, "chase")
-				hudtxt = "The enemy cutout is sliding towards you."
+				nex, ney = gamemap.EnemyMove(ex, ey, x, y, 0, "away")
+				//hudtxt = "The enemy cutout is sliding towards you."
+				hudtxt = "The enemy cutout is sliding away from you."
 			}
 
 			if enemyhit {
