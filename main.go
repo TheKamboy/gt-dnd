@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gdamore/tcell/v2"
+	"golang.org/x/term"
 )
 
 // Debug Menu Enabler (for the cheaters)
@@ -33,12 +34,17 @@ var (
 	armor              int         = 0
 	armorname          string      = "Military Clothes" // Display Armor Name
 	strength           int         = 10
-	weaponname         string      = "Pistol" // Weapon Name and Damage Checker
-	items                          = []string{"Stick", "Pistol"}
+	weaponname         string      = "Pistol" // Equiped Weapon
+	weaponitems                    = []string{"Stick", "Pistol"}
 	firstname          string      = "Keegan"
 	lastname           string      = "Miller"
 	keeganstyle        tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
 	defaultkeeganstyle tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
+)
+
+// im too lazy to program healing and other items into a array, so ints galore
+var (
+	hpotions int = 1
 )
 
 type maphandle struct {
@@ -642,7 +648,53 @@ func startattackplayer(hitchance int) (damage int, hit bool, crit bool, roll int
 	return
 }
 
-// pimp named slickback
+// a function i made for a different project, but will be update and used here
+func drawBox(s tcell.Screen, startx int, starty int, endx int, endy int, colorstyle tcell.Style) {
+	row := starty
+	col := startx
+
+	if starty == endy-1 {
+		log.Fatalf("ERROR: Box needs to be 2 or greater in height.")
+	}
+
+	s.SetContent(col, row, '╔', nil, colorstyle)
+	col++
+
+	for col != endx {
+
+		s.SetContent(col, row, '═', nil, colorstyle)
+		col++
+	}
+	s.SetContent(col, row, '╗', nil, colorstyle)
+	col = startx
+	row++
+
+	for row != endy {
+		s.SetContent(startx, row, '║', nil, colorstyle)
+		s.SetContent(endx, row, '║', nil, colorstyle)
+		row++
+	}
+
+	s.SetContent(col, row, '╚', nil, colorstyle)
+	col++
+
+	for col != endx {
+
+		s.SetContent(col, row, '═', nil, colorstyle)
+		col++
+	}
+	s.SetContent(col, row, '╝', nil, colorstyle)
+}
+
+// inventory main menu for easy finding
+func inventory_main(s tcell.Screen) {
+	width, _, _ := term.GetSize(int(os.Stdin.Fd()))
+	s.Clear()
+	drawText(s, 0, 0, "Inventory")
+	drawBox(s, 0, 2, width, 6, tcell.StyleDefault)
+}
+
+// pimp named slickback (this comment was put when that was popular, carry on)
 func debugmenu(s tcell.Screen) {
 	s.Clear()
 	drawText(s, 0, 0, "DEBUG MENU")
