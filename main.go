@@ -22,6 +22,7 @@ var (
 	grassstyle    tcell.Style = tcell.StyleDefault.Background(tcell.ColorGreen).Foreground(tcell.ColorBlack)
 	lightbluetext tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorLightBlue)
 	yellowtext    tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorYellow)
+	worldstyle    tcell.Style = tcell.StyleDefault.Foreground(tcell.ColorPurple)
 )
 
 // choose = choosing action, waitforkeypress = Wait for Key Press, idle = not player turn, move = moving action, moved = just moved a step (for checking barriers), wantmove = y/n for move, attack = attack action, youcannotreach = show cannot reach msg, enemy# = attack enemy, moveattack = aim attack, movedattack = choose aim attack, noenemy = show no enemy msg, inventory = view inventory
@@ -46,6 +47,9 @@ var (
 var (
 	hpotions int = 1
 )
+
+// checks for if there are still enemies in areas. you cant leave if there are enemies anyway
+var ()
 
 type maphandle struct {
 	givengrounds []string
@@ -541,12 +545,13 @@ func yourstats(s tcell.Screen) {
 	}
 
 	statsdisplay := func(dice string) {
+		width, _, _ := term.GetSize(int(os.Stdin.Fd()))
 		s.Clear()
-		drawText(s, 0, 0, "Name: "+firstname+" "+lastname)
-		drawText(s, 0, 2, "Health: "+strconv.Itoa(hp)+"/"+strconv.Itoa(maxhp))
-		drawText(s, 0, 3, "Weapon (Damage, Distance): "+weaponname+" ("+dice+"💥 "+strconv.Itoa(strength)+", 󱡀 "+distance+")")
-		drawText(s, 0, 4, "Armor (Defense): "+armorname+" ( "+strconv.Itoa(armor)+")")
-		drawText(s, 0, 6, "Press ? for help, or any other key to go back...")
+		drawBoxText(s, firstname+" "+lastname, 0, 0, width-1, 6, tcell.StyleDefault)
+		drawText(s, 1, 1, "Health: "+strconv.Itoa(hp)+"/"+strconv.Itoa(maxhp))
+		drawText(s, 1, 3, "Weapon (Damage, Distance): "+weaponname+" ("+dice+"💥 "+strconv.Itoa(strength)+", 󱡀 "+distance+")")
+		drawText(s, 1, 5, "Armor (Defense): "+armorname+" ( "+strconv.Itoa(armor)+")")
+		drawText(s, 1, 8, "Press ? for help, or any other key to go back...")
 	}
 
 	statsdisplay(dicesymbol)
@@ -686,6 +691,116 @@ func drawBox(s tcell.Screen, startx int, starty int, endx int, endy int, colorst
 	s.SetContent(col, row, '╝', nil, colorstyle)
 }
 
+// drawBox but you can add a title to the box
+func drawBoxText(s tcell.Screen, title string, startx int, starty int, endx int, endy int, colorstyle tcell.Style) {
+	row := starty
+	col := startx
+
+	if starty == endy-1 {
+		log.Fatalf("ERROR: Box needs to be 2 or greater in height.")
+	}
+
+	s.SetContent(col, row, '╔', nil, colorstyle)
+	col++
+	s.SetContent(col, row, '═', nil, colorstyle)
+	col++
+
+	for col != endx {
+		s.SetContent(col, row, '═', nil, colorstyle)
+		col++
+	}
+
+	for col != endx {
+
+		s.SetContent(col, row, '═', nil, colorstyle)
+		col++
+	}
+
+	s.SetContent(col, row, '╗', nil, colorstyle)
+	col = startx
+	row++
+
+	for row != endy {
+		s.SetContent(startx, row, '║', nil, colorstyle)
+		s.SetContent(endx, row, '║', nil, colorstyle)
+		row++
+	}
+
+	s.SetContent(col, row, '╚', nil, colorstyle)
+	col++
+
+	for col != endx {
+
+		s.SetContent(col, row, '═', nil, colorstyle)
+		col++
+	}
+	s.SetContent(col, row, '╝', nil, colorstyle)
+
+	// write text on the box
+	row = starty
+	col = startx + 2
+
+	for _, char := range title {
+		s.SetContent(col, row, char, nil, tcell.StyleDefault)
+		col++
+	}
+}
+
+// drawBoxText but you can color title
+func drawBoxTextStyle(s tcell.Screen, title string, startx int, starty int, endx int, endy int, colorstyle tcell.Style, textstyle tcell.Style) {
+	row := starty
+	col := startx
+
+	if starty == endy-1 {
+		log.Fatalf("ERROR: Box needs to be 2 or greater in height.")
+	}
+
+	s.SetContent(col, row, '╔', nil, colorstyle)
+	col++
+	s.SetContent(col, row, '═', nil, colorstyle)
+	col++
+
+	for col != endx {
+		s.SetContent(col, row, '═', nil, colorstyle)
+		col++
+	}
+
+	for col != endx {
+
+		s.SetContent(col, row, '═', nil, colorstyle)
+		col++
+	}
+
+	s.SetContent(col, row, '╗', nil, colorstyle)
+	col = startx
+	row++
+
+	for row != endy {
+		s.SetContent(startx, row, '║', nil, colorstyle)
+		s.SetContent(endx, row, '║', nil, colorstyle)
+		row++
+	}
+
+	s.SetContent(col, row, '╚', nil, colorstyle)
+	col++
+
+	for col != endx {
+
+		s.SetContent(col, row, '═', nil, colorstyle)
+		col++
+	}
+	s.SetContent(col, row, '╝', nil, colorstyle)
+
+	// write text on the box
+	row = starty
+	col = startx + 2
+
+	for _, char := range title {
+		s.SetContent(col, row, char, nil, textstyle)
+		col++
+	}
+}
+
 // inventory main menu for easy finding
 func inventory_main(s tcell.Screen) {
 	width, _, _ := term.GetSize(int(os.Stdin.Fd()))
@@ -713,6 +828,10 @@ func testmap(s tcell.Screen) {
 	// Keegan Aim
 	ax := x
 	ay := y
+
+	// World Aim
+	cx := x
+	cy := y
 
 	// Keegan Move
 	kx := x
@@ -869,6 +988,9 @@ func testmap(s tcell.Screen) {
 		} else if playerstate == "wantmove" {
 			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Status: Moving"
 			controltxt = "Move Here? (y/n)"
+		} else if playerstate == "world" {
+			hudtxt = "HP: " + strconv.Itoa(hp) + "/" + strconv.Itoa(maxhp) + ", Armor: " + strconv.Itoa(armor) + ", Status: Interacting"
+			controltxt = "Select object with [Enter], Exit selection with [Escape]"
 		}
 
 		// if playerstate == "choose" && !canattack {
@@ -926,6 +1048,10 @@ func testmap(s tcell.Screen) {
 			drawTextStyle(s, kx, ky, movestyle, "󰖃")
 		}
 
+		if playerstate == "world" {
+			drawTextStyle(s, cx, cy, worldstyle, "+")
+		}
+
 		if enemymoving {
 			drawTextStyle(s, nex, ney, aimingstyle, "󰖃")
 		}
@@ -960,7 +1086,7 @@ func testmap(s tcell.Screen) {
 
 				if playerstate != "waitforkeypress" {
 					if ev.Rune() == 'm' {
-						if playerstate != "move" && steps != 6 {
+						if playerstate == "choose" && steps != 6 {
 							// moving
 							kx = x
 							ky = y
@@ -979,7 +1105,7 @@ func testmap(s tcell.Screen) {
 							kx -= 1
 							steps += 1
 							playerstate = "moved"
-						} else if playerstate != "attack" && playerstate != "wantmove" {
+						} else if playerstate == "choose" {
 							ax = ex
 							ay = ey
 							if ehp > 0 {
@@ -996,7 +1122,7 @@ func testmap(s tcell.Screen) {
 							ky += 1
 							steps += 1
 							playerstate = "moved"
-						} else if playerstate != "attack" && playerstate != "wantmove" {
+						} else if playerstate == "choose" {
 							yourstats(s)
 						}
 					} else if ev.Rune() == 'd' {
@@ -1020,6 +1146,15 @@ func testmap(s tcell.Screen) {
 							ky -= 1
 							steps += 1
 							playerstate = "moved"
+						} else if playerstate == "choose" {
+							bx, by = kx, ky
+							cx = kx
+							cy = ky
+							playerstate = "world"
+						} else if playerstate == "world" {
+							by = cy
+							cy--
+							playerstate = "worldmove"
 						}
 					} else if ev.Rune() == 'n' {
 						if playerstate == "attack" {
@@ -1133,6 +1268,18 @@ func testmap(s tcell.Screen) {
 			}
 
 			break
+		}
+
+		if playerstate == "worldmove" {
+			if cx > kx+1 || cx < kx-1 {
+				cx = bx
+			}
+
+			if cy > ky+1 || cy < ky-1 {
+				cy = by
+			}
+
+			playerstate = "world"
 		}
 
 		if playerstate == "waitforkeypress" {
