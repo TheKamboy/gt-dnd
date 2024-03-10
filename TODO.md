@@ -25,7 +25,8 @@
 - Moving Between Maps
     > Implement a way to go to a different map
     * [ ] Add Object with ID
-    * [ ] Work on code to work it
+    * [ ] Add Checks for if on map move block with the right ID
+    * [ ] Move to a different map (for testing, this will only move you to a different spot of the test map)
 
 ## Doing
 
