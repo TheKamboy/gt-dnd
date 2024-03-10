@@ -22,6 +22,10 @@
     > Similar to water, but there is no current, and you take damage.
     * [ ] Add in jump over mechanic from water
     * [ ] Take random burning damage when in it from  failing to jump over, or being in it for one turn
+- Moving Between Maps
+    > Implement a way to go to a different map
+    * [ ] Add Object with ID
+    * [ ] Work on code to work it
 
 ## Doing
 
