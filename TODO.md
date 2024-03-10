@@ -14,11 +14,6 @@
 
 ## To Do
 
-- World Interaction
-    > Lets you select objects and interact
-    * [ ] Implement Cursor and make it only surround player
-    * [ ] Interactable Objects
-    * [ ] Functionality with objects
 - Water Mechanics
     > Water has a special path, that if jumped into, you will follow the current. You will not lose any health from it.
     * [ ] Jump over mechanic
@@ -46,3 +41,8 @@
     * [x] Move freely if out of combat
     * [x] Nicer Looking Menus with drawBox()
     * [x] Screen Size Detector
+- World Interaction
+    > Lets you select objects and interact
+    * [x] Implement Cursor and make it only surround player
+    * [x] Action setup
+    * [x] Interactable Objects

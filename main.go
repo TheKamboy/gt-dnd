@@ -23,6 +23,7 @@ var (
 	lightbluetext tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorLightBlue)
 	yellowtext    tcell.Style = tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorYellow)
 	worldstyle    tcell.Style = tcell.StyleDefault.Foreground(tcell.ColorPurple)
+	examinestyle  tcell.Style = tcell.StyleDefault.Foreground(tcell.ColorGreen)
 )
 
 // choose = choosing action, waitforkeypress = Wait for Key Press, idle = not player turn, move = moving action, moved = just moved a step (for checking barriers), wantmove = y/n for move, attack = attack action, youcannotreach = show cannot reach msg, enemy# = attack enemy, moveattack = aim attack, movedattack = choose aim attack, noenemy = show no enemy msg, inventory = view inventory
@@ -61,6 +62,11 @@ type maphandle struct {
 	pathy        []int
 	pathdir      []string
 	chestitems   []string
+
+	exax    []int
+	exay    []int
+	exaid   []int
+	exashow []bool
 }
 
 // https://stackoverflow.com/questions/15323767/does-go-have-if-x-in-construct-similar-to-python
@@ -131,6 +137,32 @@ func (m *maphandle) AddObj(objtype string, x int, y int) {
 	}
 }
 
+// Sets up an examinable object on the map
+func (m *maphandle) AddExamineObj(id int, x int, y int, visible bool) {
+	m.exaid = append(m.exaid, id)
+	m.exax = append(m.exax, x)
+	m.exay = append(m.exay, y)
+	m.exashow = append(m.exashow, visible)
+}
+
+func (m maphandle) ExamineAtPoint(x int, y int) (exists bool, id int) {
+	i := 0
+	exists = false
+	id = 0
+
+	for i < len(m.exax) {
+		if m.exax[i] == x && m.exay[i] == y {
+			exists = true
+			id = m.exaid[i]
+			return
+		}
+
+		i++
+	}
+
+	return
+}
+
 func (m maphandle) Show(s tcell.Screen) {
 	blocki := 0
 	i := 0
@@ -150,6 +182,16 @@ func (m maphandle) Show(s tcell.Screen) {
 		} else if m.givengrounds[i] == "chest" {
 			drawTextStyle(s, m.blockx[blocki], m.blocky[blocki], yellowtext, "󰜦")
 			blocki++
+		}
+		i++
+	}
+
+	// Examine
+	i = 0
+
+	for i < len(m.exax) {
+		if m.exashow[i] {
+			drawTextStyle(s, m.exax[i], m.exay[i], examinestyle, "E")
 		}
 		i++
 	}
@@ -212,6 +254,19 @@ func (m maphandle) GetObjectAtCoord(x int, y int) (objatcoord bool, objtype stri
 			objx = m.givenx[i]
 			objy = m.giveny[i]
 			objtype = m.givengrounds[i]
+			return
+		}
+
+		i++
+	}
+
+	// check for examine
+	i = 0
+
+	for i < len(m.exax) {
+		if m.exax[i] == x && m.exay[i] == y {
+			objatcoord = true
+			objtype = "examine"
 			return
 		}
 
@@ -858,6 +913,7 @@ func testmap(s tcell.Screen) {
 	beingattacked := false
 	enemymoving := false
 	disadvantage := false
+	usedWorld := false
 
 	// r := rand.New(rand.NewSource(time.Now().UnixMicro()))
 
@@ -883,6 +939,9 @@ func testmap(s tcell.Screen) {
 		}
 
 		gamemap.AddObj("g", 1, 3)
+
+		// test examine
+		gamemap.AddExamineObj(0, 2, 3, true)
 
 		if playerstate == "attack" && !canattack {
 			hudtxt = "You already used your attack!"
@@ -932,6 +991,7 @@ func testmap(s tcell.Screen) {
 
 			bsteps = 0
 			canattack = true
+			usedWorld = false
 		}
 
 		if playerstate == "enemy1" {
@@ -1023,7 +1083,11 @@ func testmap(s tcell.Screen) {
 				controltxt += "[a]ttack "
 			}
 
-			controltxt += "[w]orld [s]tats [i]nventory [e]nd"
+			if !usedWorld {
+				controltxt += "[w]orld "
+			}
+
+			controltxt += "[s]tats [i]nventory [e]nd"
 		}
 
 		if playerstate == "youcannotreach" {
@@ -1125,6 +1189,10 @@ func testmap(s tcell.Screen) {
 							} else {
 								playerstate = "noenemy"
 							}
+						} else if playerstate == "world" {
+							bx = cx
+							cx--
+							playerstate = "worldmove"
 						}
 					} else if ev.Rune() == 's' {
 						// check stats or move in moving state
@@ -1136,6 +1204,10 @@ func testmap(s tcell.Screen) {
 							playerstate = "moved"
 						} else if playerstate == "choose" {
 							yourstats(s)
+						} else if playerstate == "world" {
+							by = cy
+							cy++
+							playerstate = "worldmove"
 						}
 					} else if ev.Rune() == 'd' {
 						// for moving
@@ -1149,6 +1221,10 @@ func testmap(s tcell.Screen) {
 							if DEBUG {
 								debugmenu(s)
 							}
+						} else if playerstate == "world" {
+							bx = cx
+							cx++
+							playerstate = "worldmove"
 						}
 					} else if ev.Rune() == 'w' {
 						// for moving
@@ -1159,6 +1235,10 @@ func testmap(s tcell.Screen) {
 							steps += 1
 							playerstate = "moved"
 						} else if playerstate == "choose" {
+							if usedWorld && inCombat {
+								break
+							}
+
 							bx, by = kx, ky
 							cx = kx
 							cy = ky
@@ -1219,7 +1299,15 @@ func testmap(s tcell.Screen) {
 							if ground == "grass" {
 								keeganstyle = grassstyle
 							} else {
-								keeganstyle = defaultkeeganstyle
+								exists, _ := gamemap.ExamineAtPoint(kx, ky)
+
+								if exists {
+									keeganstyle = examinestyle
+								} else {
+									keeganstyle = defaultkeeganstyle
+								}
+
+								// keeganstyle = defaultkeeganstyle
 							}
 
 							playerstate = "choose"
@@ -1227,6 +1315,14 @@ func testmap(s tcell.Screen) {
 						}
 					} else if ev.Rune() == 'e' {
 						playerstate = "idle"
+					} else if ev.Key() == tcell.KeyESC {
+						if playerstate == "world" {
+							playerstate = "choose"
+						}
+					} else if ev.Key() == tcell.KeyEnter {
+						if playerstate == "world" {
+							playerstate = "worldsel"
+						}
 					}
 				}
 			}
@@ -1269,7 +1365,14 @@ func testmap(s tcell.Screen) {
 				if ground == "grass" {
 					movestyle = grassstyle
 				} else {
-					movestyle = defaultkeeganstyle
+					// movestyle = defaultkeeganstyle
+					exists, _ := gamemap.ExamineAtPoint(kx, ky)
+
+					if exists {
+						movestyle = examinestyle
+					} else {
+						movestyle = defaultkeeganstyle
+					}
 				}
 
 				if steps >= 6 && inCombat {
@@ -1311,6 +1414,27 @@ func testmap(s tcell.Screen) {
 						playerstate = "idle"
 					}
 				}
+			}
+		}
+
+		if playerstate == "worldsel" {
+			exists, id := gamemap.ExamineAtPoint(cx, cy)
+
+			if exists {
+				// add examine here
+				if id == 0 {
+					hudtxt = "it works :3"
+				}
+
+				controltxt = "Press any key to continue..."
+				playerstate = "waitforkeypress"
+				beingattacked = true
+				usedWorld = true
+			} else {
+				playerstate = "waitforkeypress"
+				hudtxt = "Nothing useful..."
+				controltxt = "Press any key to continue..."
+				beingattacked = true
 			}
 		}
 	}
