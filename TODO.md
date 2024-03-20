@@ -32,6 +32,8 @@
 
 - Inventory Menu
     > Allows the user to equip weapons, use items, and of course, view items
+    * [x] Main Menu
+    * [ ] Weapon Switcher
     * [ ] Display Menu Items
     * [ ] Switch Equiped Weapon once per turn
     * [ ] Healing Items

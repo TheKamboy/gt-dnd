@@ -785,7 +785,6 @@ func drawBoxText(s tcell.Screen, title string, startx int, starty int, endx int,
 	col++
 
 	for col != endx {
-
 		s.SetContent(col, row, '═', nil, colorstyle)
 		col++
 	}
@@ -856,12 +855,61 @@ func drawBoxTextStyle(s tcell.Screen, title string, startx int, starty int, endx
 	}
 }
 
+// weapon switching
+func inventory_weapons(s tcell.Screen) {
+	width, _, _ := term.GetSize(int(os.Stdin.Fd()))
+	s.Clear()
+	drawBoxText(s, "Inventory", 0, 0, width-1, 6, tcell.StyleDefault)
+
+	drawText(s, 0, 8, "Select an Inventory Option, or press any other key to go back.")
+
+	for {
+		// Update screen
+		s.Show()
+
+		// Poll event
+		ev := s.PollEvent()
+
+		// Process event
+		switch ev := ev.(type) {
+		case *tcell.EventResize:
+			s.Sync()
+		case *tcell.EventKey:
+			if ev.Rune() == '?' {
+			} else {
+				return
+			}
+		}
+	}
+}
+
 // inventory main menu for easy finding
 func inventory_main(s tcell.Screen) {
 	width, _, _ := term.GetSize(int(os.Stdin.Fd()))
 	s.Clear()
-	drawText(s, 0, 0, "Inventory")
-	drawBox(s, 0, 2, width, 6, tcell.StyleDefault)
+	drawBoxText(s, "Inventory", 0, 0, width-1, 6, tcell.StyleDefault)
+	drawText(s, 1, 1, "")
+
+	drawText(s, 0, 8, "Select an Inventory Option, or press any other key to go back.")
+
+	for {
+		// Update screen
+		s.Show()
+
+		// Poll event
+		ev := s.PollEvent()
+
+		// Process event
+		switch ev := ev.(type) {
+		case *tcell.EventResize:
+			s.Sync()
+		case *tcell.EventKey:
+			if ev.Rune() == '?' {
+			} else {
+				return
+			}
+		}
+	}
 }
 
 // pimp named slickback (this comment was put when that was popular, carry on)
@@ -1322,6 +1370,10 @@ func testmap(s tcell.Screen) {
 					} else if ev.Key() == tcell.KeyEnter {
 						if playerstate == "world" {
 							playerstate = "worldsel"
+						}
+					} else if ev.Rune() == 'i' {
+						if playerstate == "choose" {
+							inventory_main(s)
 						}
 					}
 				}
