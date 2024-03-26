@@ -859,9 +859,18 @@ func drawBoxTextStyle(s tcell.Screen, title string, startx int, starty int, endx
 func inventory_weapons(s tcell.Screen) {
 	width, _, _ := term.GetSize(int(os.Stdin.Fd()))
 	s.Clear()
-	drawBoxText(s, "Inventory", 0, 0, width-1, 6, tcell.StyleDefault)
+	drawBoxText(s, "Weapons", 0, 0, width-1, len(weaponitems)+1, tcell.StyleDefault)
 
-	drawText(s, 0, 8, "Select an Inventory Option, or press any other key to go back.")
+	drawText(s, 0, len(weaponitems)+3, "Select an Inventory Option, or press any other key to go back.")
+
+	// generate weapons
+	for i := 1; i-1 < len(weaponitems); i++ {
+		if weaponitems[i-1] == weaponname {
+			drawText(s, 1, i, strconv.Itoa(i)+") "+weaponitems[i-1]+"*")
+		} else {
+			drawText(s, 1, i, strconv.Itoa(i)+") "+weaponitems[i-1])
+		}
+	}
 
 	for {
 		// Update screen
@@ -875,11 +884,14 @@ func inventory_weapons(s tcell.Screen) {
 		case *tcell.EventResize:
 			s.Sync()
 		case *tcell.EventKey:
-			if ev.Rune() == '?' {
-			} else {
-				return
+			if ev.Rune() == '1' {
+				weaponname = weaponitems[0]
+			} else if ev.Rune() == '2' {
+				weaponname = weaponitems[1]
 			}
 		}
+
+		return
 	}
 }
 
@@ -888,7 +900,7 @@ func inventory_main(s tcell.Screen) {
 	width, _, _ := term.GetSize(int(os.Stdin.Fd()))
 	s.Clear()
 	drawBoxText(s, "Inventory", 0, 0, width-1, 6, tcell.StyleDefault)
-	drawText(s, 1, 1, "")
+	drawText(s, 1, 1, "1) Weapons")
 
 	drawText(s, 0, 8, "Select an Inventory Option, or press any other key to go back.")
 
@@ -905,7 +917,8 @@ func inventory_main(s tcell.Screen) {
 			s.Sync()
 		case *tcell.EventKey:
 			if ev.Rune() == '?' {
-			} else {
+			} else if ev.Rune() == '1' {
+				inventory_weapons(s)
 				return
 			}
 		}
@@ -1016,7 +1029,7 @@ func testmap(s tcell.Screen) {
 
 			if enemymoving {
 				nex, ney = gamemap.EnemyMove(ex, ey, x, y, 0, "away")
-				//hudtxt = "The enemy cutout is sliding towards you."
+				// hudtxt = "The enemy cutout is sliding towards you."
 				hudtxt = "The enemy cutout is sliding away from you."
 			}
 
