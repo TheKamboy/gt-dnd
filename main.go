@@ -5,9 +5,13 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/gopxl/beep"
+	"github.com/gopxl/beep/mp3"
+	"github.com/gopxl/beep/speaker"
 )
 
 // Styles
@@ -201,6 +205,36 @@ func startattackplayer(hitchance int) (damage int, hit bool, crit bool, roll int
 	return
 }
 
+func playMP3(filename string) {
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go helperPlayMP3(filename, &wg)
+}
+
+func helperPlayMP3(filename string, wg *sync.WaitGroup) {
+	defer wg.Done()
+	f, err := os.Open(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	streamer, format, err := mp3.Decode(f)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer streamer.Close()
+
+	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+
+	done := make(chan bool)
+	speaker.Play(beep.Seq(streamer, beep.Callback(func() {
+		done <- true
+	})))
+
+	<-done
+}
+
 func testmap(s tcell.Screen) {
 	// Keegan
 	x := 3
@@ -377,6 +411,7 @@ func testmap(s tcell.Screen) {
 							x -= 1
 							steps += 1
 							playerstate = "moved"
+							playMP3("move.mp3")
 						} else if playerstate != "attack" {
 							ax = ex
 							ay = ey
@@ -394,6 +429,7 @@ func testmap(s tcell.Screen) {
 							y += 1
 							steps += 1
 							playerstate = "moved"
+							playMP3("move.mp3")
 						} else {
 							yourstats(s)
 						}
@@ -405,6 +441,7 @@ func testmap(s tcell.Screen) {
 							x += 1
 							steps += 1
 							playerstate = "moved"
+							playMP3("move.mp3")
 						}
 					} else if ev.Rune() == 'w' {
 						// for moving
@@ -414,6 +451,7 @@ func testmap(s tcell.Screen) {
 							y -= 1
 							steps += 1
 							playerstate = "moved"
+							playMP3("move.mp3")
 						}
 					} else if ev.Rune() == 'n' {
 						if playerstate == "attack" {
